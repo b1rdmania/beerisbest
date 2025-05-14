@@ -2,6 +2,7 @@ const startButton = document.getElementById('startButton');
 const startButtonContainer = document.getElementById('startButtonContainer');
 const glassContainer = document.getElementById('glassContainer');
 const beer = document.getElementById('beer');
+const liquid = document.getElementById('liquid');
 const drinkSound = document.getElementById('drinkSound');
 
 const INITIAL_BEER_HEIGHT_PERCENT = 100; // Beer is initially 100% full
@@ -14,6 +15,11 @@ const MAX_DRINK_TILT_ANGLE = 90;  // Beta angle degrees for "empty"
 startButton.addEventListener('click', () => {
     startButtonContainer.style.display = 'none';
     glassContainer.style.display = 'flex';
+
+    // Ensure initial beer height is set for logging
+    beer.style.height = INITIAL_BEER_HEIGHT_PERCENT + '%'; 
+    console.log('[DEBUG] Initial beer.style.height:', beer.style.height);
+    console.log('[DEBUG] Initial offsetHeight - #beer:', beer.offsetHeight, 'px, #liquid:', liquid.offsetHeight, 'px');
 
     // Attempt to play and pause sound to "unlock" it for some browsers
     drinkSound.play().then(() => {
@@ -56,34 +62,29 @@ function handleOrientation(event) {
     // Test and adjust based on actual device behavior. Let's assume positive beta means tilting phone "forward to drink".
 
     let beta = event.beta; // Front-to-back tilt
+    // let alpha = event.alpha; // Side-to-side, not used for now but good to remember
+    // let gamma = event.gamma; // Also side-to-side tilt
 
     // Normalize beta for our purpose (0 when flat, up to 90 when tilted fully forward)
-    // This example assumes beta is around 0 when flat and increases as you tilt forward.
-    // You might need to adjust this mapping based on real-world testing.
-    // For simplicity, we'll work with positive beta values directly.
-    // Clamp beta to our defined drinking range and ignore values outside it.
-    if (beta < 0) beta = 0; // Ignore tilting backwards
+    // Clamp beta to our defined drinking range and ignore values outside it for height calculation.
+    let betaForHeight = event.beta;
+    if (betaForHeight < 0) betaForHeight = 0; // Ignore tilting backwards for height calculation
 
     let newHeightPercent;
 
-    if (beta <= MIN_DRINK_TILT_ANGLE) {
+    if (betaForHeight <= MIN_DRINK_TILT_ANGLE) {
         newHeightPercent = INITIAL_BEER_HEIGHT_PERCENT; // Not tilted enough, or tilted back
-    } else if (beta >= MAX_DRINK_TILT_ANGLE) {
+    } else if (betaForHeight >= MAX_DRINK_TILT_ANGLE) {
         newHeightPercent = 0; // Fully tilted, beer is empty
     } else {
-        // Calculate beer height proportionally to the tilt
-        // As beta goes from MIN_DRINK_TILT_ANGLE to MAX_DRINK_TILT_ANGLE, height goes from 100% to 0%
         const tiltRange = MAX_DRINK_TILT_ANGLE - MIN_DRINK_TILT_ANGLE;
-        const progressInTiltRange = (beta - MIN_DRINK_TILT_ANGLE) / tiltRange;
+        const progressInTiltRange = (betaForHeight - MIN_DRINK_TILT_ANGLE) / tiltRange;
         newHeightPercent = INITIAL_BEER_HEIGHT_PERCENT * (1 - progressInTiltRange);
     }
 
-    // Ensure height doesn't go below 0 or above 100
     newHeightPercent = Math.max(0, Math.min(INITIAL_BEER_HEIGHT_PERCENT, newHeightPercent));
 
     if (currentBeerHeightPercent > 0 && newHeightPercent < currentBeerHeightPercent && newHeightPercent < (INITIAL_BEER_HEIGHT_PERCENT - 1) ) {
-        // Play sound only if beer is actually decreasing and not already empty,
-        // and not just minutely changing from full.
         if (drinkSound.paused) {
             drinkSound.play().catch(e => console.warn("Sound play failed:", e));
         }
@@ -96,4 +97,21 @@ function handleOrientation(event) {
 
     currentBeerHeightPercent = newHeightPercent;
     beer.style.height = currentBeerHeightPercent + '%';
+    console.log('[DEBUG] Updated offsetHeight - #beer:', beer.offsetHeight, 'px, #liquid:', liquid.offsetHeight, 'px');
+    console.log('[DEBUG] Updated beer.style.height:', beer.style.height);
+
+    // --- New Liquid Rotation Logic ---
+    // Use the raw beta value for rotation to reflect actual device tilt.
+    // Positive beta is assumed to be tilting forward (top of phone down).
+    // So, liquid should rotate by -beta to appear level.
+    let liquidRotation = -beta; 
+
+    // Clamp the rotation to a visually reasonable range (e.g., -30 to +30 degrees)
+    const MAX_LIQUID_ROTATION = 30;
+    liquidRotation = Math.max(-MAX_LIQUID_ROTATION, Math.min(MAX_LIQUID_ROTATION, liquidRotation));
+
+    // Apply the rotation to the #liquid div
+    if (liquid) { // Ensure liquid element exists
+        liquid.style.transform = `rotate(${liquidRotation}deg)`;
+    }
 } 
