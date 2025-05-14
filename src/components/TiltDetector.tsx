@@ -34,29 +34,14 @@ const TiltDetector: React.FC<TiltDetectorProps> = ({ onTiltChange }) => {
       }
     };
 
-    // It's good practice to request permission upon a user interaction, 
-    // e.g., a button click. For this placeholder, we'll try on mount if not iOS.
-    // On iOS, this requestPermission() MUST be triggered by a user gesture.
-    // For now, let's assume the start button in Home.tsx handles the initial user gesture.
-    // This component will just add the listener if permission is already implicitly available
-    // or if requestPermission is not a function (non-iOS 13+ browsers).
-
-    // A more robust solution would involve a context or prop to indicate 
-    // that user interaction has occurred and it's safe to request permission.
-    
-    // For simplicity in this placeholder, we're not calling requestPermission() here directly.
-    // The Home.tsx component would typically have a start button that triggers this.
-    // For now, we'll just add the listener and assume permission will be handled.
-    // This is a common pattern: a main "start experience" button handles permission.
-
-    // Check if the event listener is already supported without explicit permission
-    if (typeof (DeviceOrientationEvent as any).requestPermission !== 'function') {
+    // Call requestPermission if it's likely an iOS device needing it.
+    // Otherwise, the non-permission path in requestPermission will just add the listener.
+    if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
+        requestPermission(); 
+    } else {
+        // For other browsers that don't require .requestPermission()
         window.addEventListener('deviceorientation', handleOrientation, true);
     }
-    // If DeviceOrientationEvent.requestPermission IS a function, it implies iOS 13+,
-    // and permission MUST be requested via a user gesture. We assume Home.tsx does this.
-    // Or, a button within THIS component could call `requestPermission` if designed that way.
-
 
     return () => {
       window.removeEventListener('deviceorientation', handleOrientation, true);
