@@ -34,11 +34,11 @@ body, html {
 }
 
 #glass {
-    width: 150px; /* Adjust as needed */
-    height: 300px; /* Adjust as needed */
+    width: 180px; /* Made wider */
+    height: 260px; /* Made a bit shorter for a sturdier pint look */
     border: 5px solid #333; /* Simple glass outline */
     border-top: none; /* Open top */
-    border-radius: 0 0 20px 20px; /* Rounded bottom */
+    border-radius: 0 0 15px 15px; /* Less pronounced rounding at bottom for Boston/shaker style */
     position: relative; /* For positioning the beer inside */
     background-color: rgba(200, 200, 200, 0.3); /* Slight glass transparency */
     overflow: hidden; /* To contain the beer */
@@ -49,8 +49,22 @@ body, html {
 #beer {
     width: 100%;
     height: 100%; /* Initial full height */
-    background-color: #fbb03b; /* Beer color */
+    /* background-color: #fbb03b; */ /* Beer color - REMOVED, moved to #liquid */
     /* Optional: add a subtle gradient for realism */
     /* background-image: linear-gradient(to bottom, #fddc71, #fbb03b); */
     transition: height 0.1s linear; /* Smooth animation for height change */
+    overflow: hidden; /* Ensures rotated liquid is clipped */
+    position: relative; /* Needed for absolute positioning of pseudo-elements if we were to use them, good practice */
+}
+
+#liquid {
+    width: 100%;
+    height: 100%;
+    /* background-color: #fbb03b; */ /* Beer color - REMOVED */
+    background-image: url('assets/beer-texture.png'); /* CHANGED: Placeholder for photographic beer */
+    background-size: cover; /* Ensure the image covers the liquid area */
+    background-position: center bottom; /* Align image to the bottom of the liquid */
+    background-repeat: no-repeat; /* Assuming it's not a tiling texture */
+    transform-origin: center bottom; /* Rotate around the center of its bottom edge */
+    transition: transform 0.1s linear; /* Smooth transform animation for rotation */
 } 
