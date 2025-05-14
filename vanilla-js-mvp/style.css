@@ -1,0 +1,76 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden; /* Prevents scrollbars */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #f0f0f0; /* Or any suitable background */
+    font-family: Arial, sans-serif;
+}
+
+#startButtonContainer {
+    text-align: center;
+}
+
+#startButton {
+    padding: 15px 30px;
+    font-size: 1.2em;
+    cursor: pointer;
+    border-radius: 8px;
+    border: none;
+    background-color: #ffcc00; /* Beer-like color */
+    color: #333;
+}
+
+#glassContainer {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#glass {
+    width: 160px; /* Narrower */
+    height: 280px; /* Taller */
+    border: 5px solid #333; /* Simple glass outline */
+    border-top: none; /* Open top */
+    border-radius: 0 0 10px 10px; /* Tighter curve at bottom */
+    position: relative; /* For positioning the beer inside */
+    background-color: rgba(200, 200, 200, 0.3); /* Slight glass transparency */
+    overflow: hidden; /* To contain the beer */
+    display: flex;
+    flex-direction: column-reverse; /* Beer fills from bottom */
+}
+
+#beer {
+    width: 100%;
+    height: 100%; /* Initial full height - RESTORED */
+    /* height: 250px !important; */ /* REMOVE FORCED DEBUG HEIGHT */
+    /* background-color: orange !important; */ /* REMOVE FORCED DEBUG BACKGROUND */
+    /* background-color: #fbb03b; */ /* Beer color - REMOVED, moved to #liquid */
+    /* Optional: add a subtle gradient for realism */
+    /* background-image: linear-gradient(to bottom, #fddc71, #fbb03b); */
+    transition: height 0.1s linear; /* Smooth animation for height change */
+    overflow: hidden; /* Ensures rotated liquid is clipped */
+    position: relative; /* Needed for absolute positioning of pseudo-elements if we were to use them, good practice */
+}
+
+#liquid {
+    width: 100%;
+    height: 100%;
+    /* display: block !important; */ /* REMOVE DEBUG STYLE */
+    /* position: relative !important; */ /* REMOVE DEBUG STYLE */
+    /* z-index: 10 !important; */ /* REMOVE DEBUG STYLE */
+    background-image: url('assets/beer.jpg'); /* RESTORED */
+    /* background-color: hotpink !important; */ /* REMOVE TEMPORARY DEBUG BACKGROUND */
+    /* border: 5px solid lime !important; */ /* REMOVE TEMPORARY DEBUG BORDER */
+    background-size: cover;
+    background-position: center bottom;
+    background-repeat: no-repeat;
+    transform-origin: center bottom;
+    transition: transform 0.1s linear;
+} 
