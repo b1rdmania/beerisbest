@@ -17,11 +17,26 @@ startButton.addEventListener('click', () => {
     startButtonContainer.style.display = 'none';
     glassContainer.style.display = 'flex';
 
+    // Attempt 1 to get liquid
+    const immediateLiquid = document.getElementById('liquid');
+    console.log('[DEBUG] Immediate getElementById("liquid") after display flex:', immediateLiquid);
+
+    // Attempt 2 to get liquid (closer to where we use it for the innerHTML log of its expected parent)
+    const preLogLiquid = document.getElementById('liquid');
+    console.log('[DEBUG] Pre-log getElementById("liquid"):', preLogLiquid);
+
     console.log('[DEBUG] glassContainer.innerHTML after display=flex:', glassContainer.innerHTML);
+    const beerForInnerLog = document.getElementById('beer');
+    if (beerForInnerLog) {
+        console.log('[DEBUG] beer.innerHTML (if beer exists):', beerForInnerLog.innerHTML);
+    } else {
+        console.log('[DEBUG] #beer element NOT found before trying to log its innerHTML.');
+    }
 
     // Get elements now that their container is visible
     beer = document.getElementById('beer');
-    liquid = document.getElementById('liquid');
+    liquid = document.getElementById('liquid'); // This is Attempt 3
+    console.log('[DEBUG] Main assignment: beer:', beer, ', liquid:', liquid);
 
     if (!beer || !liquid) {
         console.error('[CRITICAL DEBUG] #beer or #liquid element not found after start button click!');
