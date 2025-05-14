@@ -17,8 +17,8 @@ startButton.addEventListener('click', () => {
     glassContainer.style.display = 'flex';
 
     // Ensure initial beer height is set for logging
-    beer.style.height = INITIAL_BEER_HEIGHT_PERCENT + '%'; 
-    console.log('[DEBUG] Initial beer.style.height:', beer.style.height);
+    // beer.style.height = INITIAL_BEER_HEIGHT_PERCENT + '%'; // TEMPORARILY COMMENTED OUT FOR DEBUGGING
+    console.log('[DEBUG] Initial beer.style.height (JS attempted):', INITIAL_BEER_HEIGHT_PERCENT + '%');
     console.log('[DEBUG] Initial offsetHeight - #beer:', beer.offsetHeight, 'px, #liquid:', liquid.offsetHeight, 'px');
 
     // Attempt to play and pause sound to "unlock" it for some browsers
@@ -96,9 +96,9 @@ function handleOrientation(event) {
     }
 
     currentBeerHeightPercent = newHeightPercent;
-    beer.style.height = currentBeerHeightPercent + '%';
+    // beer.style.height = currentBeerHeightPercent + '%'; // TEMPORARILY COMMENTED OUT FOR DEBUGGING
     console.log('[DEBUG] Updated offsetHeight - #beer:', beer.offsetHeight, 'px, #liquid:', liquid.offsetHeight, 'px');
-    console.log('[DEBUG] Updated beer.style.height:', beer.style.height);
+    console.log('[DEBUG] Updated beer.style.height (JS attempted):', currentBeerHeightPercent + '%');
 
     // --- New Liquid Rotation Logic ---
     // Use the raw beta value for rotation to reflect actual device tilt.
