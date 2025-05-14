@@ -34,11 +34,11 @@ body, html {
 }
 
 #glass {
-    width: 180px; /* Made wider */
-    height: 260px; /* Made a bit shorter for a sturdier pint look */
+    width: 160px; /* Narrower */
+    height: 280px; /* Taller */
     border: 5px solid #333; /* Simple glass outline */
     border-top: none; /* Open top */
-    border-radius: 0 0 15px 15px; /* Less pronounced rounding at bottom for Boston/shaker style */
+    border-radius: 0 0 10px 10px; /* Tighter curve at bottom */
     position: relative; /* For positioning the beer inside */
     background-color: rgba(200, 200, 200, 0.3); /* Slight glass transparency */
     overflow: hidden; /* To contain the beer */
