@@ -18,25 +18,25 @@ startButton.addEventListener('click', () => {
     glassContainer.style.display = 'flex';
 
     // Attempt 1 to get liquid
-    const immediateLiquid = document.getElementById('liquid');
-    console.log('[DEBUG] Immediate getElementById("liquid") after display flex:', immediateLiquid);
+    // const immediateLiquid = document.getElementById('liquid'); // Remove intermediate log
+    // console.log('[DEBUG] Immediate getElementById("liquid") after display flex:', immediateLiquid);
 
     // Attempt 2 to get liquid (closer to where we use it for the innerHTML log of its expected parent)
-    const preLogLiquid = document.getElementById('liquid');
-    console.log('[DEBUG] Pre-log getElementById("liquid"):', preLogLiquid);
+    // const preLogLiquid = document.getElementById('liquid'); // Remove intermediate log
+    // console.log('[DEBUG] Pre-log getElementById("liquid"):', preLogLiquid);
 
-    console.log('[DEBUG] glassContainer.innerHTML after display=flex:', glassContainer.innerHTML);
-    const beerForInnerLog = document.getElementById('beer');
-    if (beerForInnerLog) {
-        console.log('[DEBUG] beer.innerHTML (if beer exists):', beerForInnerLog.innerHTML);
-    } else {
-        console.log('[DEBUG] #beer element NOT found before trying to log its innerHTML.');
-    }
+    // console.log('[DEBUG] glassContainer.innerHTML after display=flex:', glassContainer.innerHTML); // Remove innerHTML log
+    // const beerForInnerLog = document.getElementById('beer'); // Remove intermediate log
+    // if (beerForInnerLog) {
+    //    console.log('[DEBUG] beer.innerHTML (if beer exists):', beerForInnerLog.innerHTML);
+    // } else {
+    //    console.log('[DEBUG] #beer element NOT found before trying to log its innerHTML.');
+    // }
 
     // Get elements now that their container is visible
     beer = document.getElementById('beer');
     liquid = document.getElementById('liquid'); // This is Attempt 3
-    console.log('[DEBUG] Main assignment: beer:', beer, ', liquid:', liquid);
+    console.log('[DEBUG] Main assignment: beer found:', !!beer, ', liquid found:', !!liquid);
 
     if (!beer || !liquid) {
         console.error('[CRITICAL DEBUG] #beer or #liquid element not found after start button click!');
@@ -45,8 +45,8 @@ startButton.addEventListener('click', () => {
     }
 
     // Ensure initial beer height is set for logging
-    // beer.style.height = INITIAL_BEER_HEIGHT_PERCENT + '%'; // TEMPORARILY COMMENTED OUT FOR DEBUGGING
-    console.log('[DEBUG] Initial beer.style.height (JS attempted):', INITIAL_BEER_HEIGHT_PERCENT + '%');
+    beer.style.height = INITIAL_BEER_HEIGHT_PERCENT + '%'; // RESTORED
+    console.log('[DEBUG] Initial beer.style.height (JS applied):', beer.style.height);
     console.log('[DEBUG] Initial offsetHeight - #beer:', beer.offsetHeight, 'px, #liquid:', liquid.offsetHeight, 'px');
 
     // Attempt to play and pause sound to "unlock" it for some browsers
@@ -124,9 +124,9 @@ function handleOrientation(event) {
     }
 
     currentBeerHeightPercent = newHeightPercent;
-    // beer.style.height = currentBeerHeightPercent + '%'; // TEMPORARILY COMMENTED OUT FOR DEBUGGING
+    beer.style.height = currentBeerHeightPercent + '%'; // RESTORED
     console.log('[DEBUG] Updated offsetHeight - #beer:', beer.offsetHeight, 'px, #liquid:', liquid.offsetHeight, 'px');
-    console.log('[DEBUG] Updated beer.style.height (JS attempted):', currentBeerHeightPercent + '%');
+    console.log('[DEBUG] Updated beer.style.height (JS applied):', beer.style.height);
 
     // --- New Liquid Rotation Logic ---
     // Use the raw beta value for rotation to reflect actual device tilt.
