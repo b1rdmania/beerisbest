@@ -1,9 +1,10 @@
 const startButton = document.getElementById('startButton');
 const startButtonContainer = document.getElementById('startButtonContainer');
 const glassContainer = document.getElementById('glassContainer');
-const beer = document.getElementById('beer');
-const liquid = document.getElementById('liquid');
 const drinkSound = document.getElementById('drinkSound');
+
+let beer; // Declare here, assign inside listener
+let liquid; // Declare here, assign inside listener
 
 const INITIAL_BEER_HEIGHT_PERCENT = 100; // Beer is initially 100% full
 let currentBeerHeightPercent = INITIAL_BEER_HEIGHT_PERCENT;
@@ -15,6 +16,16 @@ const MAX_DRINK_TILT_ANGLE = 90;  // Beta angle degrees for "empty"
 startButton.addEventListener('click', () => {
     startButtonContainer.style.display = 'none';
     glassContainer.style.display = 'flex';
+
+    // Get elements now that their container is visible
+    beer = document.getElementById('beer');
+    liquid = document.getElementById('liquid');
+
+    if (!beer || !liquid) {
+        console.error('[CRITICAL DEBUG] #beer or #liquid element not found after start button click!');
+        alert('Critical error: Beer components not found. Please refresh.');
+        return; // Stop further execution if elements are missing
+    }
 
     // Ensure initial beer height is set for logging
     // beer.style.height = INITIAL_BEER_HEIGHT_PERCENT + '%'; // TEMPORARILY COMMENTED OUT FOR DEBUGGING
