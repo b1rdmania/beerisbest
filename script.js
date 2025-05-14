@@ -17,6 +17,8 @@ startButton.addEventListener('click', () => {
     startButtonContainer.style.display = 'none';
     glassContainer.style.display = 'flex';
 
+    console.log('[DEBUG] glassContainer.innerHTML after display=flex:', glassContainer.innerHTML);
+
     // Get elements now that their container is visible
     beer = document.getElementById('beer');
     liquid = document.getElementById('liquid');
