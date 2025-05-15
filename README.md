@@ -60,3 +60,7 @@ This section details the current React-based application.
 <!-- Trigger Vercel redeploy -->
 
 ### Features (Planned)
+
+<!-- Trigger Vercel redeploy again -->
+
+*   **Beer Glass Visualization**: Display a visual representation of a beer glass.
