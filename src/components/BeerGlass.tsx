@@ -1,41 +1,46 @@
 import React from 'react';
 
 interface BeerGlassProps {
-  beerLevel: number;
-  isTilting: boolean;
+  beerLevel: number; // Percentage 0-100
+  isTilting: boolean; // True if device is tilted significantly
+  // TODO: Potentially pass actual tilt angle for more nuanced liquid animation
 }
 
 const BeerGlass: React.FC<BeerGlassProps> = ({ beerLevel, isTilting }) => {
-  // TODO: Implement the visual representation of the beer glass
-  // Use beerLevel to set the height/fill of the beer
-  // Use isTilting to potentially apply tilt transformations to the liquid surface
+  const liquidHeight = Math.max(0, Math.min(100, beerLevel)); // Clamp between 0 and 100
 
-  const liquidHeight = `${beerLevel}%`;
-  const liquidRotation = isTilting ? (Math.random() * 20 - 10) : 0; // Placeholder tilt
+  // Define a simple tilt angle for now when isTilting is true
+  // This can be made more sophisticated later by passing the actual device tilt angle
+  const tiltAngle = isTilting ? (beerLevel > 0 ? 15 : 0) : 0; // Tilt 15 degrees, or 0 if empty/not tilting
 
   return (
-    <div className="relative w-[150px] h-[300px] border-4 border-gray-700 rounded-b-2xl overflow-hidden bg-gray-200/30 flex flex-col-reverse">
-      {/* Glass structure - simple example */}
-      {/* Beer liquid */}
-      <div 
-        className="w-full bg-amber-400 transition-all duration-100 ease-linear relative"
+    <div
+      className="relative w-[150px] h-[300px] bg-gray-200/30 border-4 border-gray-400/50 rounded-t-3xl rounded-b-lg shadow-lg overflow-hidden mx-auto"
+      style={{
+        // Simulates a slightly tapered pint glass effect with perspective
+        // For a more accurate shape, SVG or complex CSS (clip-path) would be needed.
+        // This is a simpler approach for a first pass.
+        perspective: '300px',
+      }}
+    >
+      {/* Beer Liquid */}
+      <div
+        className="absolute bottom-0 left-0 right-0 bg-cover bg-center transition-all duration-300 ease-in-out"
         style={{
-          height: liquidHeight,
+          backgroundImage: "url('/beer.jpg')", // Assumes beer.jpg is in /public
+          height: `${liquidHeight}%`,
+          transformOrigin: 'bottom center',
+          transform: `rotateZ(${tiltAngle}deg)`,
+          // Add a slight visual effect to the liquid's top edge when tilted
+          borderTop: liquidHeight > 0 && isTilting ? '2px solid rgba(255,220,150,0.7)' : 'none',
+          boxShadow: isTilting && liquidHeight > 0 ? 'inset 0px 5px 10px rgba(0,0,0,0.2)' : 'none',
         }}
       >
-        {/* Inner liquid surface for tilting - more complex to implement correctly */}
-        <div 
-          className="w-full h-full bg-amber-500 transform-origin-bottom transition-transform duration-100 ease-linear"
-          style={{
-            transform: `rotate(${liquidRotation}deg)`,
-            // backgroundImage: `url('/beer.jpg')`, // Example using image from public folder
-            // backgroundSize: 'cover',
-            // backgroundRepeat: 'no-repeat',
-            // backgroundPosition: 'bottom center',
-          }}
-        >
-        </div>
+        {/* Optional: Add some subtle bubble elements here later */}
       </div>
+
+      {/* Optional: Glass highlights/reflections can be added here */}
+      {/* e.g., <div className="absolute top-0 left-1/4 w-1/2 h-full bg-white/10 rounded-full blur-md -rotate-45"></div> */}
     </div>
   );
 };
