@@ -52,3 +52,11 @@ export default tseslint.config({
   },
 })
 ```
+
+## React + Vite + Tailwind CSS Version
+
+This section details the current React-based application.
+
+<!-- Trigger Vercel redeploy -->
+
+### Features (Planned)
