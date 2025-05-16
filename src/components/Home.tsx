@@ -97,13 +97,13 @@ const Home = () => {
     // Store tilt direction for realistic liquid rendering
     setTiltDirection(tiltData.tiltDirection);
     
-    // Calculate tilt intensity for sound volume (0-1)
+    // Calculate beta and gamma for use in conditionals
     const beta = Math.abs(tiltData.beta || 0);
     const gamma = Math.abs(tiltData.gamma || 0);
-    const tiltIntensity = Math.min(Math.max((beta - 45) / 45, 0), 1);
     
     // Adjust tilting behavior for iOS
     if (isIOS) {
+      // iOS needs special handling for the orientation
       const isLandscape = screenOrientation === 90 || screenOrientation === -90;
       
       // Only process tilt if beer remains and device is tilted correctly
