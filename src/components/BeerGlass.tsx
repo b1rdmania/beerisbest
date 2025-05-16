@@ -23,6 +23,8 @@ const BeerGlass: React.FC<BeerGlassProps> = ({
   const liquidRef = useRef<HTMLDivElement>(null);
   const foamRef = useRef<HTMLDivElement>(null);
   const glassRef = useRef<HTMLDivElement>(null);
+  const liquidSvgRef = useRef<SVGSVGElement>(null);
+  
   // Slow down how fast the beer depletes visually - smooth out changes
   const visualBeerLevel = useMemo(() => {
     return Math.max(0, Math.min(100, beerLevel));
@@ -33,6 +35,9 @@ const BeerGlass: React.FC<BeerGlassProps> = ({
 
   // Keep track of previous tilt value for smoother transitions
   const [prevTiltX, setPrevTiltX] = useState(0);
+  
+  // Keep track of dimensions for SVG path calculations
+  const [glassDimensions, setGlassDimensions] = useState({ width: 0, height: 0 });
   
   // State for visual elements
   const [bubbles, setBubbles] = useState<Array<{
@@ -70,6 +75,30 @@ const BeerGlass: React.FC<BeerGlassProps> = ({
     height: string,
     opacity: number
   }>>([]);
+  
+  // Measure glass dimensions for accurate SVG path calculations
+  useEffect(() => {
+    if (glassRef.current) {
+      const resizeObserver = new ResizeObserver(entries => {
+        for (const entry of entries) {
+          const { width, height } = entry.contentRect;
+          setGlassDimensions({ width, height });
+        }
+      });
+      
+      resizeObserver.observe(glassRef.current);
+      
+      // Initial measurement
+      setGlassDimensions({
+        width: glassRef.current.offsetWidth,
+        height: glassRef.current.offsetHeight
+      });
+      
+      return () => {
+        resizeObserver.disconnect();
+      };
+    }
+  }, []);
   
   // Force update on liquid level change for better transitions
   useEffect(() => {
@@ -206,6 +235,59 @@ const BeerGlass: React.FC<BeerGlassProps> = ({
   const adjustedTiltDirection = {
     x: isIOS ? smoothedTiltDirection.x * 1.1 : smoothedTiltDirection.x, // Slight amplification on iOS
     y: 0 // Not using Y-axis at all
+  };
+  
+  // Calculate SVG path for liquid shape - for realistic curved liquid surface
+  const calculateLiquidPath = (): string => {
+    if (glassDimensions.width === 0 || glassDimensions.height === 0) {
+      return '';
+    }
+    
+    const { width, height } = glassDimensions;
+    const levelHeight = (height * visualBeerLevel) / 100;
+    
+    // The tilt will affect the angle of the liquid surface
+    const isTiltingTowardMouth = Math.abs(adjustedTiltDirection.x) > 0.2;
+    const tiltAmount = adjustedTiltDirection.x;
+    
+    // Calculate the liquid surface angle based on tilt
+    // When device is level, liquid surface is flat (horizontal)
+    // When device is tilted, liquid surface stays level with gravity (at an angle to the device)
+    const surfaceAngleRadians = -tiltAmount * Math.PI / 4; // Convert to radians, scale appropriately
+    
+    // Calculate the vertical offset of liquid at left and right edges due to tilt
+    const leftEdgeY = levelHeight + Math.sin(surfaceAngleRadians) * (width / 2);
+    const rightEdgeY = levelHeight - Math.sin(surfaceAngleRadians) * (width / 2);
+    
+    // For meniscus effect - liquid curves up slightly at the edges where it meets the glass
+    // This is more pronounced when less tilted, as real liquids do
+    const meniscusAmount = isTiltingTowardMouth ? 3 : 6;
+    const leftMeniscusY = Math.max(0, leftEdgeY - meniscusAmount);
+    const rightMeniscusY = Math.max(0, rightEdgeY - meniscusAmount);
+    
+    // Calculate control points for the curved surface using quadratic bezier
+    // This creates a more natural curved surface vs a straight line
+    const controlPointX = width / 2; // Middle of the glass horizontally
+    const controlPointY = (leftEdgeY + rightEdgeY) / 2 + 
+                          (isTiltingTowardMouth ? -5 * Math.abs(tiltAmount) : 5); // Bulge the surface naturally
+    
+    // Build the SVG path
+    // Start at bottom left corner
+    let path = `M 0,${height} `;
+    
+    // Line to bottom right corner
+    path += `L ${width},${height} `;
+    
+    // Line up right side to the liquid level at right edge
+    path += `L ${width},${rightMeniscusY} `;
+    
+    // Curved surface from right to left using quadratic bezier
+    path += `Q ${controlPointX},${controlPointY} 0,${leftMeniscusY} `;
+    
+    // Close the path
+    path += 'Z';
+    
+    return path;
   };
   
   // Enhanced liquid physics calculation with focus on realistic drinking angle
@@ -484,6 +566,41 @@ const BeerGlass: React.FC<BeerGlassProps> = ({
           }}
         />
       ))}
+      
+      {/* SVG liquid for realistic curved appearance */}
+      <svg 
+        ref={liquidSvgRef}
+        width="100%" 
+        height="100%" 
+        viewBox={`0 0 ${glassDimensions.width} ${glassDimensions.height}`}
+        preserveAspectRatio="none"
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          zIndex: 1,
+          pointerEvents: 'none',
+        }}
+      >
+        <defs>
+          <linearGradient id="beerGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="rgba(240, 180, 50, 0.8)" />
+            <stop offset="30%" stopColor="rgba(209, 142, 12, 0.7)" />
+            <stop offset="100%" stopColor="rgba(180, 120, 5, 0.8)" />
+          </linearGradient>
+          <filter id="liquidFilter" x="-10%" y="-10%" width="120%" height="120%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="2" />
+          </filter>
+        </defs>
+        <path 
+          d={calculateLiquidPath()} 
+          fill="url(#beerGradient)"
+          filter="url(#liquidFilter)"
+          style={{
+            transition: 'all 0.8s cubic-bezier(0.22, 1, 0.36, 1)',
+          }}
+        />
+      </svg>
       
       {/* Beer substrate - gives the beer its rich color with gradient */}
       <div
