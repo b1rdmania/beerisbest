@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Button } from "./ui/button";
 import BeerGlass from "./BeerGlass";
 import TiltDetector from "./TiltDetector";
 import SoundEffects from "./SoundEffects";
@@ -57,19 +56,17 @@ const Home = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-amber-50 to-amber-100 flex flex-col items-center justify-between p-4">
+    <div className="app-container">
       {/* Header */}
-      <header className="w-full text-center py-4">
-        <h1 className="text-3xl font-bold text-amber-800">
-          Tilt-to-Drink Beer
-        </h1>
-        <p className="text-amber-700">Tilt your device to drink the beer!</p>
+      <header className="header">
+        <h1>Premium Beer Experience</h1>
+        <p>Tilt your device to enjoy our artisanal virtual beer</p>
       </header>
 
       {/* Main content */}
-      <main className="flex-1 flex flex-col items-center justify-center w-full max-w-md">
+      <main className="main-content">
         {/* Beer glass container */}
-        <div className="relative w-full h-[60vh] flex items-center justify-center">
+        <div className="glass-container">
           <BeerGlass beerLevel={beerLevel} isTilting={isTilting} />
 
           {/* Invisible tilt detector */}
@@ -80,27 +77,29 @@ const Home = () => {
         </div>
 
         {/* Beer level indicator */}
-        <div className="w-full mt-4 bg-gray-200 rounded-full h-2.5">
-          <div
-            className="bg-amber-500 h-2.5 rounded-full transition-all duration-300"
-            style={{ width: `${beerLevel}%` }}
-          ></div>
+        <div className="progress-container">
+          <div className="progress-bar">
+            <div
+              className="progress-level"
+              style={{ width: `${beerLevel}%` }}
+            ></div>
+          </div>
+          <p className="progress-text">
+            {beerLevel > 0
+              ? `Beer remaining: ${Math.round(beerLevel)}%`
+              : "Your glass is empty! Time for a refill."}
+          </p>
         </div>
-        <p className="text-amber-800 mt-2">
-          {beerLevel > 0
-            ? `Beer remaining: ${Math.round(beerLevel)}%`
-            : "Empty! Time for a refill!"}
-        </p>
       </main>
 
       {/* Footer with refill button */}
-      <footer className="w-full py-6 flex justify-center">
-        <Button
+      <footer className="footer">
+        <button
           onClick={handleRefill}
-          className="bg-amber-600 hover:bg-amber-700 text-white px-8 py-3 rounded-full text-lg font-medium"
+          className="premium-button"
         >
           Refill Beer
-        </Button>
+        </button>
       </footer>
     </div>
   );
