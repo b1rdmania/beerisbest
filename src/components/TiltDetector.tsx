@@ -160,29 +160,30 @@ const TiltDetector: React.FC<TiltDetectorProps> = ({ onTiltChange }) => {
 
   // Handle iOS permission more robustly
   const requestIOSPermission = useCallback(async () => {
-    if (!permissionAttempted) {
-      setPermissionAttempted(true);
-      try {
-        if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
-          const permission = await (DeviceOrientationEvent as any).requestPermission();
-          if (permission === 'granted') {
-            setPermissionGranted(true);
-            window.addEventListener('deviceorientation', handleOrientation, true);
-          } else {
-            console.warn('Device orientation permission denied');
-            alert('This app needs motion sensors to work. Please allow motion sensor access.');
-          }
-        } else {
-          // Non-iOS or older iOS that doesn't require permission
+    setPermissionAttempted(true);
+    try {
+      if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
+        const permission = await (DeviceOrientationEvent as any).requestPermission();
+        if (permission === 'granted') {
           setPermissionGranted(true);
-          window.addEventListener('deviceorientation', handleOrientation, true);
+          // Don't add event listener here - let the useEffect handle that
+        } else {
+          console.warn('Device orientation permission denied');
+          alert('This app needs motion sensors to work. Please allow motion sensor access.');
         }
-      } catch (error) {
-        console.error('Error requesting device orientation permission:', error);
-        alert('Could not access motion sensors. This app requires motion sensors to work properly.');
+      } else {
+        // Non-iOS or older iOS that doesn't require permission
+        setPermissionGranted(true);
+        // Don't add event listener here - let the useEffect handle that
       }
+    } catch (error) {
+      console.error('Error requesting device orientation permission:', error);
+      alert('Could not access motion sensors. This app requires motion sensors to work properly.');
+      // Fall back to mouse control on error
+      setOrientationSupported(false);
+      setUsingMouseFallback(true);
     }
-  }, [handleOrientation, permissionAttempted]);
+  }, []);
 
   // Handle orientation changes (landscape/portrait)
   useEffect(() => {
@@ -231,24 +232,10 @@ const TiltDetector: React.FC<TiltDetectorProps> = ({ onTiltChange }) => {
         return;
       }
       
-      // Only run the event check on mobile devices
+      // For mobile devices, just set orientation as supported
+      // We'll rely on other mechanisms to detect if it's actually working
       if (isIOS || window.matchMedia('(pointer: coarse)').matches) {
-        let eventFired = false;
-        
-        const testHandler = () => {
-          eventFired = true;
-          window.removeEventListener('deviceorientation', testHandler);
-        };
-        
-        window.addEventListener('deviceorientation', testHandler, true);
-        
-        // If no event after 1 second, fall back to mouse
-        setTimeout(() => {
-          if (!eventFired) {
-            setOrientationSupported(false);
-            setUsingMouseFallback(true);
-          }
-        }, 1000);
+        setOrientationSupported(true);
       }
     };
     
@@ -289,6 +276,8 @@ const TiltDetector: React.FC<TiltDetectorProps> = ({ onTiltChange }) => {
         window.removeEventListener('deviceorientation', handleOrientation, true);
       };
     }
+    
+    return undefined;
   }, [handleOrientation, permissionGranted, usingMouseFallback, handleMouseMove, orientationSupported]);
 
   // Return a button for iOS to request permissions
