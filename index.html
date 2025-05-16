@@ -174,25 +174,20 @@
           rgba(255, 255, 255, 0) 5%,
           rgba(255, 255, 255, 0) 100%
         );
-        animation: bubbles 4s linear infinite, wave 3s ease-in-out infinite;
+        animation: beer-bubbles 4s linear infinite, beer-wave 3s ease-in-out infinite;
         opacity: 0.7;
       }
       
-      @keyframes bubbles {
+      @keyframes beer-bubbles {
         0% { transform: translateY(0); opacity: 0.7; }
         100% { transform: translateY(-100px); opacity: 0; }
       }
       
       /* Add subtle beer wave animation */
-      @keyframes wave {
+      @keyframes beer-wave {
         0% { transform: translateX(-25px); }
         50% { transform: translateX(0px); }
         100% { transform: translateX(-25px); }
-      }
-      
-      /* Beer wave effect */
-      .beer-liquid:after {
-        animation: bubbles 4s linear infinite, wave 3s ease-in-out infinite;
       }
       
       /* Beer liquid foam */
