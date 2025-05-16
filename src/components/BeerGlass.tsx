@@ -15,7 +15,7 @@ const BeerGlass: React.FC<BeerGlassProps> = ({ beerLevel, isTilting }) => {
 
   return (
     <div
-      className="relative w-[150px] h-[300px] bg-gray-200/30 border-4 border-gray-400/50 rounded-t-3xl rounded-b-lg shadow-lg overflow-hidden mx-auto"
+      className="beer-glass"
       style={{
         // Simulates a slightly tapered pint glass effect with perspective
         // For a more accurate shape, SVG or complex CSS (clip-path) would be needed.
@@ -25,9 +25,8 @@ const BeerGlass: React.FC<BeerGlassProps> = ({ beerLevel, isTilting }) => {
     >
       {/* Beer Liquid */}
       <div
-        className="absolute bottom-0 left-0 right-0 bg-cover bg-center transition-all duration-300 ease-in-out"
+        className="beer-liquid"
         style={{
-          backgroundImage: "url('/beer.jpg')", // Assumes beer.jpg is in /public
           height: `${liquidHeight}%`,
           transformOrigin: 'bottom center',
           transform: `rotateZ(${tiltAngle}deg)`,

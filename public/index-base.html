@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Premium Beer Experience</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Critical inline styles only, no imports -->
+    <style>
+      body {
+        background: linear-gradient(135deg, #fff8e1, #fbeabc); 
+        color: #3c2b18;
+        font-family: 'Montserrat', system-ui, -apple-system, sans-serif;
+      }
+      #root {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+    </style>
+    <!-- Base href for consistent path resolution -->
+    <base href="/">
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+    <!-- Styles will be loaded by JavaScript -->
+    <script>
+      (function() {
+        function loadCSS(href) {
+          var link = document.createElement('link');
+          link.rel = 'stylesheet';
+          link.href = href;
+          document.head.appendChild(link);
+        }
+        // Load CSS after page content has loaded
+        window.addEventListener('DOMContentLoaded', function() {
+          loadCSS('/beer-styles.min.css');
+          setTimeout(function() {
+            loadCSS('/beer-styles.css');
+            loadCSS('/beer-data-uri.css');
+          }, 100);
+        });
+      })();
+    </script>
+  </body>
+</html> 
