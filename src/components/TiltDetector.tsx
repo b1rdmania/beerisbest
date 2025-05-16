@@ -215,23 +215,41 @@ const TiltDetector: React.FC<TiltDetectorProps> = ({ onTiltChange }) => {
         return;
       }
       
-      // Try to detect if orientation events are actually firing
-      let eventFired = false;
+      // Skip the event check on non-secure contexts (like http:// or file://)
+      // This avoids permission issues that could cause errors
+      if (window.isSecureContext === false) {
+        setOrientationSupported(false);
+        setUsingMouseFallback(true);
+        return;
+      }
       
-      const testHandler = () => {
-        eventFired = true;
-        window.removeEventListener('deviceorientation', testHandler);
-      };
+      // Immediately set to use mouse fallback for desktop environments
+      // This avoids the complexity of waiting for device orientation events
+      if (!isIOS && !window.matchMedia('(pointer: coarse)').matches) {
+        setOrientationSupported(false);
+        setUsingMouseFallback(true);
+        return;
+      }
       
-      window.addEventListener('deviceorientation', testHandler, true);
-      
-      // If no event after 1 second, fall back to mouse
-      setTimeout(() => {
-        if (!eventFired) {
-          setOrientationSupported(false);
-          setUsingMouseFallback(true);
-        }
-      }, 1000);
+      // Only run the event check on mobile devices
+      if (isIOS || window.matchMedia('(pointer: coarse)').matches) {
+        let eventFired = false;
+        
+        const testHandler = () => {
+          eventFired = true;
+          window.removeEventListener('deviceorientation', testHandler);
+        };
+        
+        window.addEventListener('deviceorientation', testHandler, true);
+        
+        // If no event after 1 second, fall back to mouse
+        setTimeout(() => {
+          if (!eventFired) {
+            setOrientationSupported(false);
+            setUsingMouseFallback(true);
+          }
+        }, 1000);
+      }
     };
     
     checkOrientationSupport();

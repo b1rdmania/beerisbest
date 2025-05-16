@@ -238,13 +238,19 @@ const Home = () => {
           />
 
           {/* Invisible tilt detector */}
-          <TiltDetector onTiltChange={handleTilt} />
+          <TiltDetector 
+            onTiltChange={handleTilt}
+          />
 
           {/* Sound effects player */}
           <SoundEffects 
             soundType={soundType} 
-            tiltIntensity={isTilting ? Math.min(Math.max((Math.abs(tiltDirection.y) * 2) + Math.abs(tiltVelocity.y || 0), 0), 1) : 0}
-          />
+            tiltIntensity={isTilting ? 
+              Math.min(Math.max(
+                Math.abs(tiltDirection.y || 0) * 2 + 
+                Math.abs(tiltVelocity?.y || 0), 0
+              ), 1) : 0
+            }
 
           {/* Fullscreen button - styled differently for iOS */}
           <button
