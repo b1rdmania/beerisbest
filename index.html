@@ -91,12 +91,11 @@
     <!-- Base href for path resolution -->
     <base href="/">
     
-    <!-- Preload all critical assets -->
+    <!-- Preload critical assets that actually exist -->
     <link rel="preload" href="/beer.jpg" as="image">
     <link rel="preload" href="/beer-raw.jpg" as="image">
     <link rel="preload" href="/beer-copy.jpg" as="image">
-    <link rel="preload" href="/assets/beer.jpg" as="image">
-    <link rel="preload" href="/assets/index-CmVMGMEP.css" as="style">
+    <link rel="preload" href="/glug.mp3" as="audio">
   </head>
   <body>
     <div id="root"></div>
@@ -140,9 +139,7 @@
             '/beer-styles-simple.css',
             '/beer-styles-no-vars.css',
             '/beer-data-uri.css',
-            '/beer-styles-browser.css',
-            '/assets/index-CmVMGMEP.css',
-            '/assets/styles.css'
+            '/beer-styles-browser.css'
           ];
           
           cssFiles.forEach(function(file) {

@@ -28,35 +28,17 @@ const SoundEffects: React.FC<SoundEffectsProps> = ({ soundType, tiltIntensity = 
     ambiance: ['/glug.mp3'],
   };
 
-  // Initialize and preload all audio elements with enhanced setup
+  // Initialize and preload all audio elements with a single audio file
   useEffect(() => {
     const initAudio = () => {
-      // Create all audio elements with fallback paths
+      // Create all audio elements with the same glug.mp3 file
       gentleRef.current = new Audio(soundPaths.gentle[0]);
-      gentleRef.current.onerror = () => {
-        if (gentleRef.current) gentleRef.current.src = soundPaths.gentle[1];
-      };
-      
       heavyRef.current = new Audio(soundPaths.heavy[0]);
-      heavyRef.current.onerror = () => {
-        if (heavyRef.current) heavyRef.current.src = soundPaths.heavy[1];
-      };
-      
       gulpingRef.current = new Audio(soundPaths.gulping[0]);
-      gulpingRef.current.onerror = () => {
-        if (gulpingRef.current) gulpingRef.current.src = soundPaths.gulping[1];
-      };
-      
       pouringRef.current = new Audio(soundPaths.pouring[0]);
-      pouringRef.current.onerror = () => {
-        if (pouringRef.current) pouringRef.current.src = soundPaths.pouring[1];
-      };
       
-      // Add subtle background ambiance
+      // Add subtle background ambiance using the same audio file
       bgAmbianceRef.current = new Audio(soundPaths.ambiance[0]);
-      bgAmbianceRef.current.onerror = () => {
-        if (bgAmbianceRef.current) bgAmbianceRef.current.src = soundPaths.ambiance[1];
-      };
       
       // Configure audio settings with better quality
       [gentleRef, heavyRef, gulpingRef, pouringRef].forEach(ref => {
