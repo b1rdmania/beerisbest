@@ -3,7 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <link rel="icon" type="image/svg+xml" href="vite.svg" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <base href="/" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -72,10 +73,10 @@
       }
     </style>
     
-    <!-- CSS with relative paths -->
-    <link rel="stylesheet" href="beer-styles.css">
-    <link rel="stylesheet" href="beer-styles.min.css">
-    <link rel="stylesheet" href="beer-styles-simple.css">
+    <!-- CSS with absolute paths -->
+    <link rel="stylesheet" href="/beer-styles.css">
+    <link rel="stylesheet" href="/beer-styles.min.css">
+    <link rel="stylesheet" href="/beer-styles-simple.css">
     
     <!-- 2. Embedded data URI beer image backup -->
     <style>
@@ -85,14 +86,14 @@
     </style>
     
     <!-- Preload critical assets -->
-    <link rel="preload" href="beer.jpg" as="image">
-    <link rel="preload" href="glug.mp3" as="audio">
+    <link rel="preload" href="/beer.jpg" as="image">
+    <link rel="preload" href="/glug.mp3" as="audio">
   </head>
   <body>
     <div id="root"></div>
     
     <!-- Script for the app -->
-    <script type="module" src="src/main.tsx"></script>
+    <script type="module" src="/src/main.tsx"></script>
     
     <!-- Fallback JavaScript to ensure CSS loading -->
     <script>
@@ -122,12 +123,12 @@
           document.head.appendChild(link);
         }
         
-        // Try multiple approaches to load CSS with relative paths
+        // Try multiple approaches to load CSS with absolute paths
         setTimeout(function() {
           var cssFiles = [
-            'beer-styles.css',
-            'beer-styles.min.css',
-            'beer-styles-simple.css'
+            '/beer-styles.css',
+            '/beer-styles.min.css',
+            '/beer-styles-simple.css'
           ];
           
           cssFiles.forEach(function(file) {
