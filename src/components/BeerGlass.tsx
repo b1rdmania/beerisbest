@@ -355,9 +355,6 @@ const BeerGlass: React.FC<BeerGlassProps> = ({
       `${10 - Math.abs(adjustedTiltDirection.x) * 5}% ${10 - Math.abs(adjustedTiltDirection.x) * 5}% 0 0` :
       '15% 15% 0 0';
     
-    // Create a meniscus effect - the curved beer surface where it touches the glass
-    const meniscusOpacity = isTiltingTowardMouth ? 0.5 - Math.abs(adjustedTiltDirection.x) * 0.3 : 0.5;
-    
     return {
       height: `${visualBeerLevel}%`,
       transformOrigin: transformOrigin,
