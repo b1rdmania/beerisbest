@@ -19,13 +19,13 @@ const SoundEffects: React.FC<SoundEffectsProps> = ({ soundType, tiltIntensity = 
   // Track the last volume level to smooth transitions
   const [lastVolume, setLastVolume] = useState(0);
 
-  // Enhanced sound file paths with fallbacks
+  // Sound file paths - using glug.mp3 as the only audio file
   const soundPaths = {
-    gentle: ['/gentle-pour.mp3', '/glug.mp3'],
-    heavy: ['/heavy-pour.mp3', '/glug.mp3'],
-    gulping: ['/gulping-sound.mp3', '/glug.mp3'],
-    pouring: ['/beer-pour.mp3', '/glug.mp3'],
-    ambiance: ['/bar-ambiance.mp3', '/glug.mp3'],
+    gentle: ['/glug.mp3'],
+    heavy: ['/glug.mp3'],
+    gulping: ['/glug.mp3'],
+    pouring: ['/glug.mp3'],
+    ambiance: ['/glug.mp3'],
   };
 
   // Initialize and preload all audio elements with enhanced setup
