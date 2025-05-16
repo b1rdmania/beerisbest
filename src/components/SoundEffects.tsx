@@ -16,6 +16,9 @@ const SoundEffects: React.FC<SoundEffectsProps> = ({ soundType, tiltIntensity = 
   const bgAmbianceRef = useRef<HTMLAudioElement | null>(null);
   const [loaded, setLoaded] = useState(false);
 
+  // Track the last volume level to smooth transitions
+  const [lastVolume, setLastVolume] = useState(0);
+
   // Enhanced sound file paths with fallbacks
   const soundPaths = {
     gentle: ['/gentle-pour.mp3', '/glug.mp3'],
@@ -106,7 +109,7 @@ const SoundEffects: React.FC<SoundEffectsProps> = ({ soundType, tiltIntensity = 
     };
   }, [loaded, soundPaths]);
 
-  // Function to smoothly transition volume with proper type safety
+  // Function to smoothly transition volume with proper type safety and much slower transition
   const applyVolumeTransition = (audioRef: React.RefObject<HTMLAudioElement | null>, targetVolume: number) => {
     if (!audioRef.current) return;
     
@@ -115,16 +118,22 @@ const SoundEffects: React.FC<SoundEffectsProps> = ({ soundType, tiltIntensity = 
       const currentVolume = audioRef.current.volume;
       const volumeDiff = targetVolume - currentVolume;
       
+      // Save last target volume for tracking
+      setLastVolume(targetVolume);
+      
       // Use RAF for smoother transitions
       const startTime = performance.now();
-      const duration = 200; // ms
+      const duration = 650; // Increased to 650ms for much slower transitions
       
       const fadeAudio = (time: number) => {
         const elapsed = time - startTime;
         const ratio = Math.min(elapsed / duration, 1);
         
+        // Use stronger easing function for smoother audio transition
+        const easedRatio = easeInOutCubic(ratio);
+        
         if (audioRef.current) {
-          audioRef.current.volume = currentVolume + volumeDiff * ratio;
+          audioRef.current.volume = currentVolume + volumeDiff * easedRatio;
         }
         
         if (ratio < 1) {
@@ -136,15 +145,30 @@ const SoundEffects: React.FC<SoundEffectsProps> = ({ soundType, tiltIntensity = 
     } else {
       // If not playing, just set volume directly
       audioRef.current.volume = targetVolume;
+      setLastVolume(targetVolume);
     }
+  };
+  
+  // Stronger easing function for even smoother transitions
+  const easeInOutCubic = (t: number): number => {
+    return t < 0.5 
+      ? 4 * t * t * t 
+      : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  };
+  
+  // Smooth intensity function to prevent abrupt sound changes
+  const getSmoothIntensity = (rawIntensity: number): number => {
+    // Apply exponential smoothing for more natural sound volume increases
+    // This makes the sound increase more gradually at first, then more rapidly
+    return Math.pow(Math.max(0, Math.min(1, rawIntensity)), 1.5);
   };
 
   // Handle sound playback based on current sound type and tilt intensity with smoother transitions
   useEffect(() => {
     if (!loaded) return;
     
-    // Calculate volume based on tilt intensity (0-1)
-    const adjustedVolume = Math.min(Math.max(tiltIntensity, 0), 1);
+    // Calculate volume based on tilt intensity (0-1) with extra smoothing for left-right tilt
+    const smoothedIntensity = getSmoothIntensity(tiltIntensity);
     
     // Function to stop all sounds with a gentle fade out
     const stopAllSounds = () => {
@@ -159,7 +183,7 @@ const SoundEffects: React.FC<SoundEffectsProps> = ({ soundType, tiltIntensity = 
               ref.current.pause();
               ref.current.currentTime = 0;
             }
-          }, 200);
+          }, 700); // Extended to 700ms for slower fade out
         }
       });
     };
@@ -182,18 +206,20 @@ const SoundEffects: React.FC<SoundEffectsProps> = ({ soundType, tiltIntensity = 
     switch(soundType) {
       case "gentle":
         if (gentleRef.current) {
-          // Gentle sound volume varies with tilt intensity
-          const volumeLevel = adjustedVolume * 0.4; // Gentle sound is quieter
+          // Gentle sound volume varies with tilt intensity - even quieter for realism
+          const volumeLevel = smoothedIntensity * 0.35; // Gentler sound
           
           if (gentleRef.current.paused) {
-            gentleRef.current.volume = volumeLevel;
+            gentleRef.current.volume = volumeLevel * 0.2; // Start even quieter for fade-in effect
             gentleRef.current.play().catch(e => console.warn("Audio play failed:", e));
+            // Gradually increase to target volume for smoother start
+            setTimeout(() => applyVolumeTransition(gentleRef, volumeLevel), 100);
           } else {
             applyVolumeTransition(gentleRef, volumeLevel);
           }
           
-          // Adjust playback rate slightly based on tilt intensity
-          gentleRef.current.playbackRate = 0.9 + (adjustedVolume * 0.2);
+          // Adjust playback rate slightly based on tilt intensity - even slower rate
+          gentleRef.current.playbackRate = 0.75 + (smoothedIntensity * 0.15);
           
           // Stop other sounds
           [heavyRef, gulpingRef, pouringRef].forEach(ref => {
@@ -204,25 +230,27 @@ const SoundEffects: React.FC<SoundEffectsProps> = ({ soundType, tiltIntensity = 
                   ref.current.pause();
                   ref.current.currentTime = 0;
                 }
-              }, 200);
+              }, 700);
             }
           });
         }
         break;
       case "heavy":
         if (heavyRef.current) {
-          // Heavy sound has more volume range
-          const volumeLevel = adjustedVolume * 0.65;
+          // Heavy sound has more volume range but still quieter overall
+          const volumeLevel = smoothedIntensity * 0.55;
           
           if (heavyRef.current.paused) {
-            heavyRef.current.volume = volumeLevel;
+            heavyRef.current.volume = volumeLevel * 0.2; // Start even quieter for fade-in effect
             heavyRef.current.play().catch(e => console.warn("Audio play failed:", e));
+            // Gradually increase to target volume
+            setTimeout(() => applyVolumeTransition(heavyRef, volumeLevel), 100);
           } else {
             applyVolumeTransition(heavyRef, volumeLevel);
           }
           
-          // Adjust playback rate based on tilt intensity for more realism
-          heavyRef.current.playbackRate = 0.95 + (adjustedVolume * 0.3);
+          // Adjust playback rate based on tilt intensity for more realism - even slower
+          heavyRef.current.playbackRate = 0.8 + (smoothedIntensity * 0.2);
           
           // Stop other sounds
           [gentleRef, gulpingRef, pouringRef].forEach(ref => {
@@ -233,25 +261,27 @@ const SoundEffects: React.FC<SoundEffectsProps> = ({ soundType, tiltIntensity = 
                   ref.current.pause();
                   ref.current.currentTime = 0;
                 }
-              }, 200);
+              }, 700);
             }
           });
         }
         break;
       case "gulping":
         if (gulpingRef.current) {
-          // Gulping sound is more intense
-          const volumeLevel = 0.3 + (adjustedVolume * 0.6);
+          // Gulping sound is more intense but starts more gradually
+          const volumeLevel = 0.2 + (smoothedIntensity * 0.5);
           
           if (gulpingRef.current.paused) {
-            gulpingRef.current.volume = volumeLevel;
+            gulpingRef.current.volume = volumeLevel * 0.3; // Start even quieter for fade-in effect
             gulpingRef.current.play().catch(e => console.warn("Audio play failed:", e));
+            // Gradually increase to target volume
+            setTimeout(() => applyVolumeTransition(gulpingRef, volumeLevel), 100);
           } else {
             applyVolumeTransition(gulpingRef, volumeLevel);
           }
           
-          // Higher playback rate for intense gulping
-          gulpingRef.current.playbackRate = 1 + (adjustedVolume * 0.4);
+          // Even slower playback rate for gulping
+          gulpingRef.current.playbackRate = 0.8 + (smoothedIntensity * 0.3);
           
           // Stop other sounds
           [gentleRef, heavyRef, pouringRef].forEach(ref => {
@@ -262,28 +292,31 @@ const SoundEffects: React.FC<SoundEffectsProps> = ({ soundType, tiltIntensity = 
                   ref.current.pause();
                   ref.current.currentTime = 0;
                 }
-              }, 200);
+              }, 700);
             }
           });
         }
         break;
       case "pouring":
         if (pouringRef.current) {
-          // Pouring is always consistent volume
-          const volumeLevel = 0.75; 
+          // Pouring is always consistent volume but still smoother transitions
+          const volumeLevel = 0.65; // Slightly quieter than before
           
           if (pouringRef.current.paused) {
-            pouringRef.current.volume = volumeLevel;
+            pouringRef.current.volume = volumeLevel * 0.4; // Start even quieter for fade-in effect
             pouringRef.current.play().catch(e => console.warn("Audio play failed:", e));
             
             // Reset playback to start to ensure we hear the entire pouring sound
             pouringRef.current.currentTime = 0;
+            
+            // Gradually increase to target volume
+            setTimeout(() => applyVolumeTransition(pouringRef, volumeLevel), 150);
           } else {
             applyVolumeTransition(pouringRef, volumeLevel);
           }
           
-          // Normal playback rate for pouring
-          pouringRef.current.playbackRate = 1;
+          // Slower playback rate for pouring
+          pouringRef.current.playbackRate = 0.85;
           
           // Stop other sounds
           [gentleRef, heavyRef, gulpingRef].forEach(ref => {
@@ -294,7 +327,7 @@ const SoundEffects: React.FC<SoundEffectsProps> = ({ soundType, tiltIntensity = 
                   ref.current.pause();
                   ref.current.currentTime = 0;
                 }
-              }, 200);
+              }, 700);
             }
           });
         }
@@ -305,7 +338,7 @@ const SoundEffects: React.FC<SoundEffectsProps> = ({ soundType, tiltIntensity = 
         stopAllSounds();
         break;
     }
-  }, [soundType, tiltIntensity, loaded]);
+  }, [soundType, tiltIntensity, loaded, lastVolume]);
 
   // Enable sounds on user interaction (needed for iOS Safari)
   useEffect(() => {

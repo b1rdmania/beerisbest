@@ -2,6 +2,161 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Beer glass animation keyframes - slower, more realistic wave */
+@keyframes beer-wave {
+  0% {
+    border-radius: 35% 65% 60% 40% / 50% 35% 65% 50%;
+  }
+  25% {
+    border-radius: 40% 60% 35% 65% / 40% 45% 55% 60%;
+  }
+  50% {
+    border-radius: 55% 45% 55% 45% / 60% 55% 45% 40%;
+  }
+  75% {
+    border-radius: 60% 40% 70% 30% / 45% 60% 40% 55%;
+  }
+  100% {
+    border-radius: 35% 65% 60% 40% / 50% 35% 65% 50%;
+  }
+}
+
+/* Bubble animations with different paths - slower rising bubbles */
+@keyframes bubble-rise-straight {
+  0% {
+    transform: translateY(0) scale(0.8);
+    opacity: 0.3;
+  }
+  20% {
+    opacity: 0.7;
+  }
+  80% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(-150px) scale(1.2);
+    opacity: 0;
+  }
+}
+
+@keyframes bubble-rise-curved-left {
+  0% {
+    transform: translate(0, 0) scale(0.8);
+    opacity: 0.3;
+  }
+  25% {
+    transform: translate(-15px, -40px) scale(0.9);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translate(-20px, -80px) scale(1);
+    opacity: 0.8;
+  }
+  75% {
+    transform: translate(-15px, -120px) scale(1.1);
+    opacity: 0.6;
+  }
+  100% {
+    transform: translate(0, -150px) scale(1.2);
+    opacity: 0;
+  }
+}
+
+@keyframes bubble-rise-curved-right {
+  0% {
+    transform: translate(0, 0) scale(0.8);
+    opacity: 0.3;
+  }
+  25% {
+    transform: translate(15px, -40px) scale(0.9);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translate(20px, -80px) scale(1);
+    opacity: 0.8;
+  }
+  75% {
+    transform: translate(15px, -120px) scale(1.1);
+    opacity: 0.6;
+  }
+  100% {
+    transform: translate(0, -150px) scale(1.2);
+    opacity: 0;
+  }
+}
+
+/* Condensation drop animation - slower for realism */
+@keyframes droplet-fall {
+  0% {
+    transform: translateY(0);
+    opacity: 0.8;
+  }
+  15% {
+    transform: translateY(30px);
+    opacity: 0.8;
+  }
+  30% {
+    transform: translateY(50px);
+    opacity: 0.7;
+  }
+  80% {
+    opacity: 0.6;
+    transform: translateY(200px);
+  }
+  100% {
+    transform: translateY(300px);
+    opacity: 0;
+  }
+}
+
+/* Boston/Pint glass specific styles */
+.beer-glass {
+  /* Pint glass with subtle inward curve at bottom */
+  background: linear-gradient(to bottom, 
+    rgba(255, 255, 255, 0.2) 0%, 
+    rgba(255, 255, 255, 0.1) 30%,
+    rgba(255, 255, 255, 0.05) 100%);
+  border-radius: 3% 3% 0 0;
+}
+
+/* Glass left/right tilt classes for highlighting the drinking edge */
+.beer-glass.tilt-left .glass-mouth-left {
+  opacity: 0.8;
+}
+
+.beer-glass.tilt-right .glass-mouth-right {
+  opacity: 0.8;
+}
+
+/* iOS specific styles */
+.ios-glass {
+  /* Improve performance on iOS */
+  -webkit-transform-style: preserve-3d;
+  transform-style: preserve-3d;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+.ios-liquid {
+  /* Fix for iOS animation flicker */
+  -webkit-transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+}
+
+.ios-animating {
+  animation: beer-wave 3s ease-in-out infinite;
+}
+
+/* Liquid transition class for smoother changes */
+.beer-liquid {
+  transition: all 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.beer-liquid.tilting {
+  transition: all 0.95s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Original CSS styles are commented out below */
 /* :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;

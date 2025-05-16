@@ -23,7 +23,16 @@ const BeerGlass: React.FC<BeerGlassProps> = ({
   const liquidRef = useRef<HTMLDivElement>(null);
   const foamRef = useRef<HTMLDivElement>(null);
   const glassRef = useRef<HTMLDivElement>(null);
-  const liquidHeight = Math.max(0, Math.min(100, beerLevel)); // Clamp between 0 and 100
+  // Slow down how fast the beer depletes visually - smooth out changes
+  const visualBeerLevel = useMemo(() => {
+    return Math.max(0, Math.min(100, beerLevel));
+  }, [beerLevel]);
+  
+  // Track last known good beer level for side residue calculation
+  const [lastSignificantLevel, setLastSignificantLevel] = useState(visualBeerLevel);
+
+  // Keep track of previous tilt value for smoother transitions
+  const [prevTiltX, setPrevTiltX] = useState(0);
   
   // State for visual elements
   const [bubbles, setBubbles] = useState<Array<{
@@ -52,12 +61,65 @@ const BeerGlass: React.FC<BeerGlassProps> = ({
     opacity: number
   }>>([]);
   
+  // Track glass residue (beer that clings to sides)
+  const [residueDrops, setResidueDrops] = useState<Array<{
+    id: number,
+    left: string,
+    top: string,
+    width: string,
+    height: string,
+    opacity: number
+  }>>([]);
+  
   // Force update on liquid level change for better transitions
   useEffect(() => {
     if (liquidRef.current) {
-      liquidRef.current.style.height = `${liquidHeight}%`;
+      liquidRef.current.style.height = `${visualBeerLevel}%`;
     }
-  }, [liquidHeight]);
+    
+    // Update the last significant level for residue calculation
+    // Only update when the level decreases significantly to create "sticky" effect
+    if (visualBeerLevel < lastSignificantLevel - 2) {
+      setLastSignificantLevel(prevLevel => {
+        // Create new residue drops when level decreases significantly
+        if (prevLevel > 20 && visualBeerLevel < prevLevel - 5) {
+          createResidueDrops(prevLevel);
+        }
+        return visualBeerLevel;
+      });
+    }
+  }, [visualBeerLevel, lastSignificantLevel]);
+  
+  // Create beer residue that sticks to glass sides when beer level drops
+  const createResidueDrops = (previousLevel: number) => {
+    if (previousLevel < 10) return; // Don't create drops when nearly empty
+    
+    // Number of drops based on how much the level decreased
+    const dropCount = 3 + Math.floor(Math.random() * 5);
+    
+    // Create residue drops at the previous liquid level
+    const newDrops = Array(dropCount).fill(0).map((_, i) => ({
+      id: Date.now() + i,
+      left: `${Math.random() * 85 + 5}%`,
+      top: `${100 - previousLevel - 5 + Math.random() * 8}%`,
+      width: `${2 + Math.random() * 6}px`,
+      height: `${10 + Math.random() * 25}px`,
+      opacity: 0.2 + Math.random() * 0.4
+    }));
+    
+    // Add new drops to existing ones
+    setResidueDrops(prev => [...prev, ...newDrops]);
+    
+    // Slowly fade out residue drops over time
+    setTimeout(() => {
+      setResidueDrops(prev => 
+        prev.map(drop => ({
+          ...drop,
+          opacity: drop.opacity * 0.7
+        })).filter(drop => drop.opacity > 0.05)
+      );
+    }, 5000);
+  };
   
   // Generate random bubbles on component mount with more variety
   useEffect(() => {
@@ -73,7 +135,7 @@ const BeerGlass: React.FC<BeerGlassProps> = ({
     setBubbles(newBubbles);
     
     // Create condensation droplets with varied opacity
-    const newDrops = Array(20).fill(0).map((_, i) => ({
+    const newDrops = Array(25).fill(0).map((_, i) => ({
       id: i,
       left: `${Math.random() * 90}%`,
       top: `${5 + Math.random() * 80}%`,
@@ -95,7 +157,7 @@ const BeerGlass: React.FC<BeerGlassProps> = ({
     
     // Set up periodic bubble refreshing
     const bubbleRefreshInterval = setInterval(() => {
-      if (beerLevel > 0) {
+      if (visualBeerLevel > 5) { // Only create bubbles when there's beer
         setBubbles(prev => {
           // Replace 1-3 bubbles with new ones
           const numToReplace = 1 + Math.floor(Math.random() * 3);
@@ -119,128 +181,150 @@ const BeerGlass: React.FC<BeerGlassProps> = ({
     }, 2000);
     
     return () => clearInterval(bubbleRefreshInterval);
-  }, [beerLevel]);
+  }, []);
   
-  // Apply low-pass filter to tilt direction for smoother motion
+  // Apply much stronger low-pass filter to tilt direction for slower, smoother motion
+  // ONLY use x-axis for more realistic drinking simulation
   const smoothedTiltDirection = useMemo(() => {
-    // Simple low-pass filter with bias toward recent values for iOS
-    const filterStrength = isIOS ? 0.8 : 0.7;
+    // Only consider X-axis tilt (left-right movement) for more natural drinking motion
+    // Stronger smoothing factor for much slower movement
+    const filterStrength = isIOS ? 0.92 : 0.90; 
+    
+    // Calculate new tilt value with strong smoothing for slower motion
+    const newTiltX = prevTiltX * filterStrength + (tiltDirection.x * (1 - filterStrength));
+    
+    // Update previous tilt for next frame
+    setPrevTiltX(newTiltX);
     
     return {
-      x: tiltDirection.x * filterStrength + (1 - filterStrength) * (tiltDirection.x || 0),
-      y: tiltDirection.y * filterStrength + (1 - filterStrength) * (tiltDirection.y || 0)
+      x: newTiltX,
+      y: 0 // Ignore Y-axis tilt completely
     };
-  }, [tiltDirection.x, tiltDirection.y, isIOS]);
+  }, [tiltDirection.x, prevTiltX, isIOS]);
   
   // Adjust tilt values for iOS specifically
   const adjustedTiltDirection = {
-    x: isIOS ? smoothedTiltDirection.x * 1.2 : smoothedTiltDirection.x, // Amplify a bit on iOS
-    y: isIOS ? smoothedTiltDirection.y * 1.2 : smoothedTiltDirection.y,
+    x: isIOS ? smoothedTiltDirection.x * 1.1 : smoothedTiltDirection.x, // Slight amplification on iOS
+    y: 0 // Not using Y-axis at all
   };
   
-  // Enhanced liquid physics calculation
+  // Enhanced liquid physics calculation with focus on realistic drinking angle
   const calculateLiquidStyle = (): LiquidStyle => {
-    // Calculate tilt angle from direction vectors
-    const tiltAngle = isTilting ? Math.max(0, adjustedTiltDirection.y * 90) : 0;
-    const sideAngle = adjustedTiltDirection.x * 25; // Left-right tilt angle
+    // We're only considering X-axis tilt (left-right) for natural drinking motion
+    // This represents tilting the glass toward your mouth
+    const sideAngle = adjustedTiltDirection.x * 25; // Base rotation for left-right tilt
     
-    // Calculate liquid shift based on tilt with improved physics
-    const tiltOffset = Math.min(35, (tiltAngle / 90) * 60);
-    const shiftX = tiltAngle > 25 ? `${adjustedTiltDirection.x * tiltOffset * 1.2}%` : "0%";
+    // Calculate if glass is tilted toward mouth - only valid if tilting significantly
+    const isTiltingTowardMouth = isTilting && Math.abs(adjustedTiltDirection.x) > 0.2;
     
-    // Factor in velocity for inertia effects (subtle)
-    const inertiaX = velocity.x * 5;
-    const inertiaY = velocity.y * 3;
+    // Simulate drinking angle - for realistic drinking, the glass tilts toward mouth
+    const drinkingAngle = isTiltingTowardMouth ? Math.abs(adjustedTiltDirection.x) * 70 : 0;
+    
+    // Calculate tilt offset for liquid shift - more pronounced when drinking
+    const tiltOffset = Math.min(30, Math.abs(adjustedTiltDirection.x) * 60);
+    const shiftX = isTiltingTowardMouth 
+      ? `${adjustedTiltDirection.x * tiltOffset * 1.2}%` 
+      : "0%";
+    
+    // Factor in velocity for subtle inertia effects
+    const inertiaX = velocity.x * 3; // Reduced for slower motion
     
     // Create transform array with enhanced physics
     const transforms = [];
     
     // Base rotation from left-right tilt
-    transforms.push(`rotateZ(${sideAngle + inertiaX * 0.3}deg)`);
+    transforms.push(`rotateZ(${sideAngle + inertiaX * 0.2}deg)`);
     
-    // Add tilt-based transforms for more realistic fluid
-    if (tiltAngle > 0) {
-      // More dramatic transform when significantly tilted
-      if (tiltAngle > 25) {
-        transforms.push(`translateX(${shiftX})`);
-        
-        // Add subtle Y translation for depth
-        if (tiltAngle > 45) {
-          transforms.push(`translateY(${-tiltAngle * 0.05}px)`);
-        }
-      }
+    // Add tilt-based transforms for more realistic fluid movement
+    if (isTiltingTowardMouth) {
+      // Translate liquid toward mouth direction
+      transforms.push(`translateX(${shiftX})`);
       
-      // Add skew for realism with inertia
-      transforms.push(`skewX(${(-adjustedTiltDirection.y * 6) + inertiaY}deg)`);
+      // Add skew for realism - liquid surface tilts
+      transforms.push(`skewX(${-adjustedTiltDirection.x * 15}deg)`);
     }
     
-    // Determine transform origin based on tilt direction and angle
-    const transformOrigin = tiltAngle > 25 
+    // Determine transform origin based on tilt direction for drinking motion
+    // Origin is opposite the tilt direction (pivot point)
+    const transformOrigin = isTiltingTowardMouth 
       ? `bottom ${adjustedTiltDirection.x < 0 ? 'right' : 'left'}`
       : 'bottom center';
     
-    // Calculate easing curve based on motion
-    const transitionTiming = isTilting ? 
-      `cubic-bezier(0.22, 1, 0.36, 1)` : 
-      `cubic-bezier(0.34, 1.56, 0.64, 1)`;
+    // Calculate easing curve - slower for more natural movement
+    const transitionTiming = isTilting 
+      ? `cubic-bezier(0.22, 1, 0.36, 1)` 
+      : `cubic-bezier(0.34, 1.56, 0.64, 1)`;
     
-    // Calculate wave effect strength based on velocity and tilt
-    const waveStrength = Math.min(1, Math.abs(velocity.x) * 5) * (tiltAngle > 30 ? 1 : 0.5);
+    // Calculate wave effect strength - more subtle now
+    const waveStrength = Math.min(0.7, Math.abs(velocity.x) * 3) * (drinkingAngle > 20 ? 0.7 : 0.3);
+    
+    // Ensure there's more beer at the side of the glass when tilting toward mouth
+    const sideRiseEffect = isTiltingTowardMouth ? `radial-gradient(
+      ellipse at ${adjustedTiltDirection.x < 0 ? 'right' : 'left'} bottom,
+      transparent 0%,
+      transparent 50%,
+      rgba(209, 142, 12, 0.2) 50%,
+      rgba(209, 142, 12, 0.3) 100%
+    )` : 'none';
     
     return {
-      height: `${liquidHeight}%`,
+      height: `${visualBeerLevel}%`,
       transformOrigin: transformOrigin,
       transform: transforms.length ? transforms.join(' ') : 'none',
-      transition: `all 0.3s ${transitionTiming}`,
+      transition: `all 0.8s ${transitionTiming}`, // Even slower transition for smoother movement
       // Add a visual effect to the liquid's top edge when tilted
-      borderTop: liquidHeight > 0 && isTilting ? '2px solid rgba(255,220,150,0.7)' : 'none',
+      borderTop: visualBeerLevel > 0 && isTilting ? '2px solid rgba(255,220,150,0.7)' : 'none',
       // Enhanced shadow for more realistic depth
-      boxShadow: isTilting && liquidHeight > 0 
-        ? `inset 0px 5px 15px rgba(0,0,0,${0.15 + tiltAngle/90 * 0.15})` 
+      boxShadow: isTilting && visualBeerLevel > 0 
+        ? `inset 0px 5px 15px rgba(0,0,0,${0.15 + Math.abs(adjustedTiltDirection.x) * 0.2})` 
         : 'none',
       // Wave animation strength tied to motion
       animationName: waveStrength > 0.1 ? 'beer-wave' : 'none',
-      animationDuration: '2s',
+      animationDuration: '3s', // Slower wave animation
       animationTimingFunction: 'ease-in-out',
       animationIterationCount: 'infinite',
       animationPlayState: isTilting ? 'running' : 'paused',
       // Use hardware acceleration for better performance on iOS
       WebkitTransform: transforms.length ? transforms.join(' ') : 'none',
       WebkitBackfaceVisibility: 'hidden',
+      // Add background with side-clinging effects
+      backgroundImage: sideRiseEffect,
+      backgroundSize: '100% 100%',
+      backgroundBlendMode: 'overlay',
     };
   };
   
   // Improved physics for the foam to move more independently
   const calculateFoamStyle = (): CSSProperties => {
-    const sideAngle = adjustedTiltDirection.x * 15; // Less dramatic than liquid
+    const sideAngle = adjustedTiltDirection.x * 12; // Less dramatic than liquid
     const transforms = [];
     
     // Factor in liquid level - foam sticks to glass more as level decreases
-    const liquidRatio = liquidHeight / 100;
+    const liquidRatio = visualBeerLevel / 100;
     
     // Foam rotates less than liquid
     transforms.push(`rotateZ(${sideAngle * 0.6}deg)`);
     
     // Foam lags behind liquid with damping based on remaining beer
-    if (isTilting && adjustedTiltDirection.y > 0) {
-      // Foam follows liquid but with more lag when less liquid remains
-      transforms.push(`translateX(${adjustedTiltDirection.x * (3 + (1-liquidRatio) * 3)}%)`);
+    if (isTilting && Math.abs(adjustedTiltDirection.x) > 0.2) {
+      // Foam follows liquid but with more lag
+      transforms.push(`translateX(${adjustedTiltDirection.x * (2 + (1-liquidRatio) * 2)}%)`);
       
       // Foam compresses slightly when glass is tilted heavily
-      if (adjustedTiltDirection.y > 0.6) {
-        transforms.push(`scaleY(${1 - adjustedTiltDirection.y * 0.15})`);
+      if (Math.abs(adjustedTiltDirection.x) > 0.5) {
+        transforms.push(`scaleY(${1 - Math.abs(adjustedTiltDirection.x) * 0.15})`);
       }
     }
     
     return {
       transform: transforms.length ? transforms.join(' ') : 'none',
-      // Slower transition than liquid for natural feel
-      transition: 'all 0.45s cubic-bezier(0.34, 1.56, 0.64, 1)',
+      // Even slower transition than liquid for natural feel
+      transition: 'all 0.95s cubic-bezier(0.34, 1.56, 0.64, 1)', 
       WebkitTransform: transforms.length ? transforms.join(' ') : 'none',
       // Make foam thinner as liquid decreases
-      height: `${Math.max(8, 14 * (liquidRatio * 0.8 + 0.2))}px`,
+      height: `${Math.max(10, 18 * (liquidRatio * 0.8 + 0.2))}px`, // Taller foam
       // Reduce opacity slightly when nearly empty
-      opacity: liquidHeight > 10 ? 0.95 : Math.max(0.5, liquidHeight / 10),
+      opacity: visualBeerLevel > 10 ? 0.95 : Math.max(0.5, visualBeerLevel / 10),
     };
   };
   
@@ -260,16 +344,26 @@ const BeerGlass: React.FC<BeerGlassProps> = ({
   
   // Apply subtle glass tilt effect separate from liquid
   const calculateGlassEffect = (): CSSProperties => {
-    // Glass tilts slightly in the direction of tilt but not as much as liquid
-    const glassXTilt = adjustedTiltDirection.x * 3;
-    const glassYTilt = adjustedTiltDirection.y * 2;
+    // Glass tilts in the direction the user is "drinking" from
+    const glassRotation = adjustedTiltDirection.x * 5; // Small rotation angle for glass itself
+    
+    // Determine if we're tilting toward drinking position
+    const isTiltingTowardMouth = Math.abs(adjustedTiltDirection.x) > 0.2;
+    
+    // Tilt glass toward "mouth" (top corner of phone)
+    // This creates the impression of bringing the glass to your mouth
+    const drinkingTilt = isTiltingTowardMouth 
+      ? `rotateZ(${glassRotation}deg) rotate${adjustedTiltDirection.x < 0 ? 'Y' : 'Y'}(${Math.abs(adjustedTiltDirection.x) * 5}deg)`
+      : `rotateZ(${glassRotation}deg)`;
     
     return {
-      transform: `rotateZ(${glassXTilt}deg) rotateX(${glassYTilt}deg)`,
-      transition: 'transform 0.5s cubic-bezier(0.22, 1, 0.36, 1)',
+      transform: drinkingTilt,
+      transition: 'transform 0.8s cubic-bezier(0.22, 1, 0.36, 1)', // Slower glass movement
+      // Position the drinking edge at top corner based on tilt direction
+      transformOrigin: adjustedTiltDirection.x < 0 ? 'top right' : 'top left',
     };
   };
-  
+
   return (
     <div
       ref={glassRef}
@@ -279,9 +373,71 @@ const BeerGlass: React.FC<BeerGlassProps> = ({
         perspective: '300px',
         WebkitPerspective: '300px', // For iOS
         position: 'relative',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        width: '80vw', // Bigger glass
+        maxWidth: '400px',
+        height: '400px', // Taller glass
+        margin: '0 auto',
+        borderRadius: '10% 10% 0 0 / 5% 5% 0 0', // Pint glass shape - slightly curved at top
+        background: 'linear-gradient(to bottom, rgba(255,255,255,0.3), rgba(255,255,255,0.1))',
+        boxShadow: '0 0 20px rgba(255,255,255,0.1), inset 0 0 15px rgba(255,255,255,0.05)',
+        // Boston/Pint shape with subtle curves
+        clipPath: 'polygon(0% 5%, 4% 0, 96% 0, 100% 5%, 102% 100%, -2% 100%)'
       }}
     >
+      {/* Drinking edge indicators - subtle highlights at top corners */}
+      <div
+        className="glass-mouth-left"
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '20%',
+          height: '5px',
+          background: 'linear-gradient(to right, rgba(255,255,255,0.5), transparent)',
+          borderRadius: '30% 0 0 0',
+          zIndex: 10,
+          opacity: adjustedTiltDirection.x > 0.1 ? 0.8 : 0.2, // Highlight when tilting this way
+          transition: 'opacity 0.5s ease'
+        }}
+      />
+      
+      <div
+        className="glass-mouth-right"
+        style={{
+          position: 'absolute',
+          top: 0,
+          right: 0,
+          width: '20%',
+          height: '5px',
+          background: 'linear-gradient(to left, rgba(255,255,255,0.5), transparent)',
+          borderRadius: '0 30% 0 0',
+          zIndex: 10,
+          opacity: adjustedTiltDirection.x < -0.1 ? 0.8 : 0.2, // Highlight when tilting this way
+          transition: 'opacity 0.5s ease'
+        }}
+      />
+      
+      {/* Beer residue that clings to the sides of the glass */}
+      {residueDrops.map(drop => (
+        <div
+          key={`residue-${drop.id}`}
+          className="beer-residue"
+          style={{
+            position: 'absolute',
+            left: drop.left,
+            top: drop.top,
+            width: drop.width,
+            height: drop.height,
+            background: 'linear-gradient(to bottom, rgba(209, 142, 12, 0.4), rgba(209, 142, 12, 0.1))',
+            borderRadius: '40%',
+            opacity: drop.opacity,
+            zIndex: 2,
+            transition: 'opacity 8s linear'
+          }}
+        />
+      ))}
+    
       {/* Condensation drops on glass exterior */}
       {condensation.map(drop => (
         <div
@@ -311,9 +467,10 @@ const BeerGlass: React.FC<BeerGlassProps> = ({
           bottom: 0,
           left: 0,
           right: 0,
-          height: `${liquidHeight}%`,
+          height: `${visualBeerLevel}%`,
           background: 'linear-gradient(to bottom, rgba(209, 142, 12, 0.2) 0%, rgba(209, 142, 12, 0.4) 100%)',
           zIndex: 1,
+          transition: 'height 0.8s cubic-bezier(0.22, 1, 0.36, 1)'
         }}
       />
       
@@ -357,8 +514,8 @@ const BeerGlass: React.FC<BeerGlassProps> = ({
         className={`beer-liquid ${isIOS ? 'ios-liquid' : ''} ${isTilting ? 'tilting' : ''}`}
         style={calculateLiquidStyle()}
       >
-        {/* Random animated bubbles with varied paths */}
-        {bubbles.map(bubble => (
+        {/* Only show bubbles when there's enough beer */}
+        {visualBeerLevel > 5 && bubbles.map(bubble => (
           <div
             key={`bubble-${bubble.id}`}
             className={`bubble bubble-${bubble.path}`}
@@ -371,7 +528,7 @@ const BeerGlass: React.FC<BeerGlassProps> = ({
               borderRadius: '50%',
               background: 'rgba(255,255,255,0.5)',
               filter: 'blur(0.5px)',
-              animation: `bubble-rise-${bubble.path} ${3 / bubble.speed}s ease-in ${bubble.delay} infinite`,
+              animation: `bubble-rise-${bubble.path} ${4 / bubble.speed}s ease-in ${bubble.delay} infinite`, // Slower bubbles
               zIndex: 2
             }}
           />
@@ -387,12 +544,13 @@ const BeerGlass: React.FC<BeerGlassProps> = ({
           position: 'absolute',
           left: 0,
           right: 0,
-          bottom: `${liquidHeight}%`,
+          bottom: `${visualBeerLevel}%`,
           background: 'linear-gradient(to bottom, rgba(255, 252, 232, 0.95) 0%, rgba(255, 248, 210, 0.5) 60%, transparent 100%)',
           borderRadius: '2px',
           zIndex: 3,
           boxShadow: 'inset 0 2px 3px -1px rgba(255, 255, 255, 0.7)',
-          pointerEvents: 'none'
+          pointerEvents: 'none',
+          transition: 'bottom 0.8s cubic-bezier(0.22, 1, 0.36, 1)' // Match liquid level transition
         }}
       >
         {/* Foam bubbles for more realistic foam */}
@@ -412,7 +570,7 @@ const BeerGlass: React.FC<BeerGlassProps> = ({
           />
         ))}
       </div>
-      
+
       {/* Glass rim highlight */}
       <div 
         className="glass-rim"
@@ -421,10 +579,25 @@ const BeerGlass: React.FC<BeerGlassProps> = ({
           top: 0,
           left: 0,
           right: 0,
-          height: '6px',
+          height: '8px', // Thicker rim
           background: 'linear-gradient(to bottom, rgba(255,255,255,0.4), transparent)',
           borderRadius: '30px 30px 0 0',
           zIndex: 5,
+          pointerEvents: 'none'
+        }}
+      />
+      
+      {/* Glass bottom for pint shape */}
+      <div 
+        className="glass-bottom"
+        style={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: '15px',
+          background: 'linear-gradient(to top, rgba(255,255,255,0.15), transparent)',
+          zIndex: 1,
           pointerEvents: 'none'
         }}
       />
