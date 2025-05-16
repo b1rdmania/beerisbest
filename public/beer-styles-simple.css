@@ -1,0 +1,157 @@
+/* Simplified Premium Beer Styles */
+/* Variables */
+:root {
+  --primary: #96501e;
+  --secondary: #fbeabc;
+  --accent: #f5b941;
+  --text: #3c2b18;
+}
+
+/* Basic Elements */
+body {
+  background: #fbeabc;
+  color: #3c2b18;
+  font-family: 'Montserrat', sans-serif;
+  min-height: 100vh;
+  line-height: 1.6;
+}
+
+#root {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1, h2, h3 {
+  font-family: 'Playfair Display', serif;
+}
+
+/* Containers */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.header {
+  text-align: center;
+  padding: 30px 0;
+  position: relative;
+}
+
+.header h1 {
+  font-size: 3rem;
+  font-weight: 700;
+  color: #96501e;
+  margin-bottom: 8px;
+}
+
+.header p {
+  font-size: 1.1rem;
+  color: #6e5b46;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.glass-container {
+  position: relative;
+  height: 65vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 0;
+}
+
+/* Beer Glass */
+.beer-glass {
+  width: 180px;
+  height: 350px;
+  background-color: rgba(240, 240, 240, 0.2);
+  border: 5px solid rgba(220, 220, 220, 0.4);
+  border-radius: 30px 30px 10px 10px;
+  overflow: hidden;
+  position: relative;
+  margin: 0 auto;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+/* Beer Liquid */
+.beer-liquid {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to bottom, #fcbf1d 0%, #f2af14 50%, #d18e0c 100%);
+  background-size: cover;
+  background-position: center;
+  transition: all 0.4s ease;
+}
+
+/* Progress Bar */
+.progress-container {
+  width: 100%;
+  max-width: 400px;
+  margin: 30px auto 15px;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 10px;
+  background-color: rgba(240, 240, 240, 0.5);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.progress-level {
+  height: 100%;
+  border-radius: 99px;
+  background: #f5b941;
+  transition: width 0.4s ease;
+}
+
+.progress-text {
+  text-align: center;
+  font-size: 1.1rem;
+  color: #96501e;
+  font-weight: 500;
+  margin-top: 15px;
+}
+
+.footer {
+  padding: 30px 0;
+  text-align: center;
+}
+
+/* Button */
+.premium-button {
+  background: #96501e;
+  color: #fff;
+  padding: 14px 32px;
+  border-radius: 999px;
+  border: none;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.premium-button:hover {
+  background: #7a4019;
+}
+
+/* Large screens */
+@media (min-width: 768px) {
+  .beer-glass {
+    width: 200px;
+    height: 400px;
+  }
+} 

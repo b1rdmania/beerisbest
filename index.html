@@ -5,15 +5,55 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Premium Beer Experience</title>
-    <!-- Google Fonts -->
+    
+    <!-- Google Fonts - Preconnect for performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
-    <!-- External CSS -->
-    <link rel="stylesheet" href="/beer-styles.css">
+    
+    <!-- Critical inline CSS - Will always load -->
+    <style>
+      body {background: linear-gradient(135deg, #fff8e1, #fbeabc); font-family: 'Montserrat', sans-serif;}
+      .beer-glass {width: 180px; height: 350px; background-color: rgba(240, 240, 240, 0.2); border: 5px solid rgba(220, 220, 220, 0.4);}
+      .beer-liquid {background: linear-gradient(to bottom, rgba(252, 191, 29, 1) 0%, rgba(242, 175, 20, 1) 50%, rgba(209, 142, 12, 1) 100%);}
+    </style>
+    
+    <!-- Different CSS approaches for maximum compatibility -->
+    <link rel="stylesheet" href="/beer-styles-simple.css" media="all">
+    <link rel="stylesheet" href="/beer-styles-no-vars.css" media="all">
+    <link rel="stylesheet" href="/beer-styles-browser.css" media="all">
+    <link rel="stylesheet" href="/beer-data-uri.css" media="all">
+    <link rel="stylesheet" href="/beer-styles.min.css" media="all">
+    <link rel="stylesheet" href="/beer-styles.css" media="(min-width: 1px)">
+    
+    <!-- Fix for path resolution -->
+    <base href="/">
+    
+    <!-- Preload key assets -->
+    <link rel="preload" href="/beer.jpg" as="image">
+    <link rel="preload" href="/beer-raw.jpg" as="image">
+    <link rel="preload" href="/beer-copy.jpg" as="image">
+    <link rel="preload" href="/assets/beer.jpg" as="image">
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <!-- Fallback JavaScript to load CSS if needed -->
+    <script>
+      (function() {
+        function addCSS(href) {
+          var link = document.createElement('link');
+          link.rel = 'stylesheet';
+          link.href = href;
+          document.head.appendChild(link);
+        }
+        window.addEventListener('DOMContentLoaded', function() {
+          // Only add if needed
+          if (!document.querySelector('link[href*="beer-styles"]')) {
+            addCSS('/beer-styles.css');
+          }
+        });
+      })();
+    </script>
   </body>
 </html> 

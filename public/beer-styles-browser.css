@@ -1,0 +1,69 @@
+/* Browser-specific styles for cross-platform compatibility */
+
+/* Standard browsers - should work everywhere */
+.beer-glass {
+  display: block;
+  width: 180px;
+  height: 350px;
+  background-color: rgba(240, 240, 240, 0.2);
+  border: 5px solid rgba(220, 220, 220, 0.4);
+  border-radius: 30px 30px 10px 10px;
+  position: relative;
+  margin: 0 auto;
+}
+
+/* WebKit browsers (Chrome, Safari, newer Edge) */
+@media (-webkit-min-device-pixel-ratio: 0) {
+  .beer-glass {
+    -webkit-box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  }
+  
+  .beer-liquid {
+    -webkit-transition: all 0.4s ease;
+    transition: all 0.4s ease;
+  }
+}
+
+/* Firefox */
+@-moz-document url-prefix() {
+  .beer-glass {
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  }
+  
+  .beer-liquid {
+    transition: all 0.4s ease-in-out;
+  }
+}
+
+/* Edge (Legacy) */
+@supports (-ms-ime-align:auto) {
+  .beer-glass {
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  }
+  
+  .beer-liquid {
+    transition: all 0.4s linear;
+  }
+}
+
+/* Internet Explorer */
+@media all and (-ms-high-contrast: none), (-ms-high-contrast: active) {
+  .beer-glass {
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  }
+  
+  /* Simplify animations for IE */
+  .beer-liquid {
+    transition: none;
+  }
+}
+
+/* Base styles for all browsers */
+.beer-liquid {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #f2af14;
+} 
