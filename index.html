@@ -2,57 +2,151 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>Premium Beer Experience</title>
     
-    <!-- Google Fonts - Preconnect for performance -->
+    <!-- Google Fonts with preconnect for performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
     
-    <!-- Critical inline CSS - Will always load -->
+    <!-- CRITICAL: Core inline styles that will always work -->
     <style>
-      body {background: linear-gradient(135deg, #fff8e1, #fbeabc); font-family: 'Montserrat', sans-serif;}
-      .beer-glass {width: 180px; height: 350px; background-color: rgba(240, 240, 240, 0.2); border: 5px solid rgba(220, 220, 220, 0.4);}
-      .beer-liquid {background: linear-gradient(to bottom, rgba(252, 191, 29, 1) 0%, rgba(242, 175, 20, 1) 50%, rgba(209, 142, 12, 1) 100%);}
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+      body { 
+        background: linear-gradient(135deg, #fff8e1, #fbeabc);
+        color: #3c2b18;
+        font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        min-height: 100vh;
+        line-height: 1.6;
+      }
+      #root {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      h1, h2, h3 { font-family: 'Playfair Display', Georgia, serif; }
+      .app-container { display: flex; flex-direction: column; min-height: 100vh; }
+      .beer-glass {
+        width: 180px;
+        height: 350px;
+        background-color: rgba(240, 240, 240, 0.2);
+        border: 5px solid rgba(220, 220, 220, 0.4);
+        border-radius: 30px 30px 10px 10px;
+        overflow: hidden;
+        position: relative;
+        margin: 0 auto;
+      }
+      .beer-liquid {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(to bottom, #fcbf1d 0%, #f2af14 50%, #d18e0c 100%);
+      }
+      .progress-bar {
+        width: 100%;
+        height: 10px;
+        background-color: rgba(240, 240, 240, 0.5);
+        border-radius: 99px;
+        overflow: hidden;
+      }
+      .progress-level {
+        height: 100%;
+        border-radius: 99px;
+        background: #f5b941;
+      }
+      .premium-button {
+        background: #96501e;
+        color: white;
+        padding: 14px 32px;
+        border-radius: 999px;
+        border: none;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+      }
     </style>
     
-    <!-- Different CSS approaches for maximum compatibility -->
-    <link rel="stylesheet" href="/beer-styles-simple.css" media="all">
-    <link rel="stylesheet" href="/beer-styles-no-vars.css" media="all">
-    <link rel="stylesheet" href="/beer-styles-browser.css" media="all">
-    <link rel="stylesheet" href="/beer-data-uri.css" media="all">
-    <link rel="stylesheet" href="/beer-styles.min.css" media="all">
-    <link rel="stylesheet" href="/beer-styles.css" media="(min-width: 1px)">
+    <!-- Multiple CSS loading approaches for maximum compatibility -->
+    <!-- 1. Direct CSS file references with multiple fallbacks -->
+    <link rel="stylesheet" href="/beer-styles-simple.css">
+    <link rel="stylesheet" href="/beer-styles-browser.css">
+    <link rel="stylesheet" href="/beer-styles-no-vars.css">
+    <link rel="stylesheet" href="/beer-data-uri.css">
+    <link rel="stylesheet" href="/beer-styles.min.css">
+    <link rel="stylesheet" href="/beer-styles.css">
     
-    <!-- Fix for path resolution -->
+    <!-- 2. Embedded data URI beer image backup -->
+    <style>
+      .beer-liquid { 
+        background-image: url('data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wgARCABAAEADASIAAhEBAxEB/8QAGgAAAgMBAQAAAAAAAAAAAAAAAAQCAwUGAf/EABcBAQEBAQAAAAAAAAAAAAAAAAABAgP/2gAMAwEAAhADEAAAAfn+yYx2Kb1HhZbVZIYKmCCCnkbZLB/oVZxGGUgE0DGZyp4YKKBW/CqIu0v7DXnVeNiuVJnmrOOMN+/x8WZ2Wd1FHOlHrh1CXH//xAAkEAABBAICAgIDAQAAAAAAAAABAAIDBAUREhMGISIxFDJBUf/aAAgBAQABPwB9msHi46e3PbGu0SQSfXtdOuV1Fa9XhgmJMb3tGhrKOMMtJ7Q0nXr91iK7Z8WyQA6cV4BjqznSvAB11C7uJxpzVv5Fsxvk4N6NCf8Adf6sfgcbhoJZII3GVwAdI478j/SFzwthK7mQDLYIBcfQ0N6XluUixmVsve3i2V5c3XsKvd/Nx0FgkA8Bsd6KpfDu5Q+h4WVZLYpzQW4fZCsVTJ4hd+JXqtE8pHya9J1m+6fQALvW0xslaPk0ke1UzF01b2Zx0SEK7qyqjZf2IC2DJJPpVK9ircZZhaHscNgq9HDTB9LwCl2eZRVqswNQxb9jYUuGik+cDwwn7BTqxgcWlVmOcRpWKhYHAqy1qrNO9KtqhkvE5Q22jjxAOtgELpsNmVsM/JWPzGVhK//EAB0RAAICAwEBAQAAAAAAAAAAAAECAAMREiExQSL/2gAIAQIBAT8ABE9R0BjoQ8kVXMrN2JmQQ5yz8iMNTtfiOnmYTEbDmVXE3ETAZiU7jEEcqXYmO9i1kkz/xAAeEQACAgIDAQEAAAAAAAAAAAAAAQIRAyEEEjETQf/aAAgBAwEBPwBLZJErUNkXobbJqyLOuR3g/wAKZEk0cXnfWr7PkbtWRypFtaJY+u0cXl9Yypo7Nn5s3RGSLpIUm2ffk//Z'); 
+      }
+    </style>
+    
+    <!-- Base href for path resolution -->
     <base href="/">
     
-    <!-- Preload key assets -->
+    <!-- Preload all critical assets -->
     <link rel="preload" href="/beer.jpg" as="image">
     <link rel="preload" href="/beer-raw.jpg" as="image">
     <link rel="preload" href="/beer-copy.jpg" as="image">
     <link rel="preload" href="/assets/beer.jpg" as="image">
+    <link rel="preload" href="/assets/index-CmVMGMEP.css" as="style">
   </head>
   <body>
     <div id="root"></div>
+    
+    <!-- Script for the app -->
     <script type="module" src="/src/main.tsx"></script>
-    <!-- Fallback JavaScript to load CSS if needed -->
+    
+    <!-- Fallback JavaScript to ensure CSS loading -->
     <script>
       (function() {
+        // Create a simple beer glass UI if nothing loads
+        window.addEventListener('load', function() {
+          if (!document.querySelector('.beer-glass')) {
+            var rootEl = document.getElementById('root');
+            if (rootEl && rootEl.children.length === 0) {
+              rootEl.innerHTML = 
+                '<div style="text-align:center;padding:40px;">' +
+                  '<h1 style="color:#96501e;font-size:32px;margin-bottom:20px;">Premium Beer Experience</h1>' +
+                  '<div style="margin:40px auto;width:180px;height:350px;border:5px solid rgba(220,220,220,0.4);border-radius:30px 30px 10px 10px;position:relative;overflow:hidden;">' + 
+                    '<div style="position:absolute;bottom:0;left:0;right:0;height:100%;background:linear-gradient(to bottom,#fcbf1d,#d18e0c);"></div>' +
+                  '</div>' +
+                  '<button style="background:#96501e;color:white;padding:14px 32px;border-radius:99px;border:none;font-weight:bold;">Refill Beer</button>' +
+                '</div>';
+            }
+          }
+        });
+        
+        // Ensure CSS is loaded
         function addCSS(href) {
           var link = document.createElement('link');
           link.rel = 'stylesheet';
           link.href = href;
           document.head.appendChild(link);
         }
-        window.addEventListener('DOMContentLoaded', function() {
-          // Only add if needed
-          if (!document.querySelector('link[href*="beer-styles"]')) {
-            addCSS('/beer-styles.css');
-          }
-        });
+        
+        // Try multiple approaches to load CSS
+        setTimeout(function() {
+          var cssFiles = [
+            '/beer-styles.css',
+            '/beer-styles.min.css',
+            '/beer-styles-simple.css',
+            '/beer-styles-no-vars.css',
+            '/beer-data-uri.css',
+            '/beer-styles-browser.css',
+            '/assets/index-CmVMGMEP.css',
+            '/assets/styles.css'
+          ];
+          
+          cssFiles.forEach(function(file) {
+            addCSS(file);
+          });
+        }, 100);
       })();
     </script>
   </body>

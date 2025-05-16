@@ -1,15 +1,37 @@
 import React, { useEffect, useCallback } from 'react';
 
 interface TiltDetectorProps {
-  onTiltChange: (tiltData: { alpha: number | null; beta: number | null; gamma: number | null }) => void;
+  onTiltChange: (tiltData: { 
+    alpha: number | null; 
+    beta: number | null; 
+    gamma: number | null;
+    isTiltedForward: boolean;
+    tiltDirection: { x: number, y: number };
+  }) => void;
 }
 
 const TiltDetector: React.FC<TiltDetectorProps> = ({ onTiltChange }) => {
   const handleOrientation = useCallback((event: DeviceOrientationEvent) => {
+    const beta = event.beta; // Front-to-back tilt in degrees (-180 to 180)
+    const gamma = event.gamma; // Left-to-right tilt in degrees (-90 to 90)
+    
+    // Calculate if device is tilted forward enough to pour (beta > 45 typically)
+    const isTiltedForward = beta !== null && beta > 45;
+    
+    // Calculate tilt direction for realistic liquid physics
+    // Normalize the values to a range between -1 and 1
+    // This will be used to tilt the liquid in the glass realistically
+    const tiltDirection = {
+      x: gamma !== null ? Math.max(-1, Math.min(1, gamma / 90)) : 0, // Left-right tilt
+      y: beta !== null ? Math.max(-1, Math.min(1, (beta - 90) / 90)) : 0, // Front-back tilt beyond level
+    };
+    
     onTiltChange({
       alpha: event.alpha,
-      beta: event.beta, 
-      gamma: event.gamma,
+      beta, 
+      gamma,
+      isTiltedForward,
+      tiltDirection,
     });
   }, [onTiltChange]);
 
