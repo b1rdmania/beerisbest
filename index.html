@@ -135,6 +135,12 @@
         bottom: 0;
         left: 0;
         right: 0;
+        /* Fallback color gradient if image fails to load */
+        background: linear-gradient(to bottom, 
+          rgba(247, 183, 24, 1) 0%,
+          rgba(232, 157, 15, 1) 50%,
+          rgba(201, 134, 9, 1) 100%);
+        /* Add image as secondary layer that may or may not load */
         background-image: url('beer.jpg');
         background-size: cover;
         background-position: center;
@@ -142,6 +148,51 @@
         box-shadow: 
           inset 0 5px 10px rgba(0,0,0,0.2),
           0 -5px 5px rgba(255, 220, 150, 0.2);
+      }
+      
+      /* Beer bubbles animation */
+      .beer-liquid:after {
+        content: '';
+        position: absolute;
+        top: 10%;
+        left: 0;
+        right: 0;
+        height: 100%;
+        background: radial-gradient(
+          circle at 30% 30%, 
+          rgba(255, 255, 255, 0.3) 0%, 
+          rgba(255, 255, 255, 0) 5%,
+          rgba(255, 255, 255, 0) 100%
+        ), radial-gradient(
+          circle at 70% 40%, 
+          rgba(255, 255, 255, 0.3) 0%, 
+          rgba(255, 255, 255, 0) 5%,
+          rgba(255, 255, 255, 0) 100%
+        ), radial-gradient(
+          circle at 50% 60%, 
+          rgba(255, 255, 255, 0.3) 0%, 
+          rgba(255, 255, 255, 0) 5%,
+          rgba(255, 255, 255, 0) 100%
+        );
+        animation: bubbles 4s linear infinite, wave 3s ease-in-out infinite;
+        opacity: 0.7;
+      }
+      
+      @keyframes bubbles {
+        0% { transform: translateY(0); opacity: 0.7; }
+        100% { transform: translateY(-100px); opacity: 0; }
+      }
+      
+      /* Add subtle beer wave animation */
+      @keyframes wave {
+        0% { transform: translateX(-25px); }
+        50% { transform: translateX(0px); }
+        100% { transform: translateX(-25px); }
+      }
+      
+      /* Beer wave effect */
+      .beer-liquid:after {
+        animation: bubbles 4s linear infinite, wave 3s ease-in-out infinite;
       }
       
       /* Beer liquid foam */
