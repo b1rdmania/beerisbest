@@ -25,7 +25,7 @@ const SoundEffects: React.FC<SoundEffectsProps> = ({ soundType, tiltIntensity = 
     heavy: ['/heavy-pour.mp3', '/glug.mp3'],
     gulping: ['/gulping-sound.mp3', '/glug.mp3'],
     pouring: ['/beer-pour.mp3', '/glug.mp3'],
-    ambiance: ['/bar-ambiance.mp3', '/ambient.mp3'],
+    ambiance: ['/bar-ambiance.mp3', '/glug.mp3'],
   };
 
   // Initialize and preload all audio elements with enhanced setup
