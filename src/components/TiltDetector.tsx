@@ -1,4 +1,5 @@
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useState } from 'react';
+import { isIOS, isMobile } from 'react-device-detect';
 
 interface TiltDetectorProps {
   onTiltChange: (tiltData: { 
@@ -11,19 +12,46 @@ interface TiltDetectorProps {
 }
 
 const TiltDetector: React.FC<TiltDetectorProps> = ({ onTiltChange }) => {
+  const [permissionGranted, setPermissionGranted] = useState(false);
+  const [permissionAttempted, setPermissionAttempted] = useState(false);
+
+  // Create a more robust orientation handler for iOS
   const handleOrientation = useCallback((event: DeviceOrientationEvent) => {
-    const beta = event.beta; // Front-to-back tilt in degrees (-180 to 180)
-    const gamma = event.gamma; // Left-to-right tilt in degrees (-90 to 90)
+    // Ensure we have valid data
+    if (event.beta === null || event.gamma === null) return;
     
-    // Calculate if device is tilted forward enough to pour (beta > 45 typically)
-    const isTiltedForward = beta !== null && beta > 45;
+    let beta = event.beta; // Front-to-back tilt
+    let gamma = event.gamma; // Left-to-right tilt
+    
+    // iOS-specific adjustments
+    if (isIOS) {
+      // iOS has different orientation behavior in landscape mode
+      if (window.orientation === 90) {
+        // Landscape right
+        const temp = beta;
+        beta = gamma;
+        gamma = -temp;
+      } else if (window.orientation === -90) {
+        // Landscape left
+        const temp = beta;
+        beta = -gamma;
+        gamma = temp;
+      } else if (window.orientation === 180) {
+        // Upside down
+        beta = -beta;
+        gamma = -gamma;
+      }
+    }
+    
+    // Calculate if device is tilted forward enough to pour
+    // For iOS, we need to be more precise with this calculation
+    const isTiltedForward = beta > 45 && Math.abs(gamma) < 60;
     
     // Calculate tilt direction for realistic liquid physics
     // Normalize the values to a range between -1 and 1
-    // This will be used to tilt the liquid in the glass realistically
     const tiltDirection = {
-      x: gamma !== null ? Math.max(-1, Math.min(1, gamma / 90)) : 0, // Left-right tilt
-      y: beta !== null ? Math.max(-1, Math.min(1, (beta - 90) / 90)) : 0, // Front-back tilt beyond level
+      x: Math.max(-1, Math.min(1, gamma / 90)), // Left-right tilt
+      y: Math.max(-1, Math.min(1, (beta - 90) / 90)), // Front-back tilt beyond level
     };
     
     onTiltChange({
@@ -35,43 +63,80 @@ const TiltDetector: React.FC<TiltDetectorProps> = ({ onTiltChange }) => {
     });
   }, [onTiltChange]);
 
-  useEffect(() => {
-    const requestPermission = async () => {
-      if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
-        try {
-          const permissionState = await (DeviceOrientationEvent as any).requestPermission();
-          if (permissionState === 'granted') {
+  // Handle iOS permission more robustly
+  const requestIOSPermission = useCallback(async () => {
+    if (!permissionAttempted) {
+      setPermissionAttempted(true);
+      try {
+        if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
+          const permission = await (DeviceOrientationEvent as any).requestPermission();
+          if (permission === 'granted') {
+            setPermissionGranted(true);
             window.addEventListener('deviceorientation', handleOrientation, true);
           } else {
-            console.warn('Device orientation permission not granted.');
-            alert('Permission for device orientation was denied.');
+            console.warn('Device orientation permission denied');
+            alert('This app needs motion sensors to work. Please allow motion sensor access.');
           }
-        } catch (error) {
-          console.error('Error requesting device orientation permission:', error);
-          alert('Could not get permission for device orientation.');
+        } else {
+          // Non-iOS or older iOS that doesn't require permission
+          setPermissionGranted(true);
+          window.addEventListener('deviceorientation', handleOrientation, true);
         }
-      } else {
-        // For browsers that do not require explicit permission
-        window.addEventListener('deviceorientation', handleOrientation, true);
+      } catch (error) {
+        console.error('Error requesting device orientation permission:', error);
+        alert('Could not access motion sensors. This app requires motion sensors to work properly.');
       }
-    };
-
-    // Call requestPermission if it's likely an iOS device needing it.
-    // Otherwise, the non-permission path in requestPermission will just add the listener.
-    if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
-        requestPermission(); 
-    } else {
-        // For other browsers that don't require .requestPermission()
-        window.addEventListener('deviceorientation', handleOrientation, true);
     }
+  }, [handleOrientation, permissionAttempted]);
 
-    return () => {
-      window.removeEventListener('deviceorientation', handleOrientation, true);
+  // Handle orientation changes (landscape/portrait)
+  useEffect(() => {
+    const handleOrientationChange = () => {
+      // Force a re-render on orientation change
+      console.log('Screen orientation changed:', window.orientation);
     };
-  }, [handleOrientation]);
 
-  // This component is invisible, it only detects and reports tilt.
-  return null; 
+    window.addEventListener('orientationchange', handleOrientationChange);
+    return () => {
+      window.removeEventListener('orientationchange', handleOrientationChange);
+    };
+  }, []);
+
+  // Setup orientation listening
+  useEffect(() => {
+    // Automatic setup for non-iOS devices
+    if (!isIOS) {
+      window.addEventListener('deviceorientation', handleOrientation, true);
+      return () => {
+        window.removeEventListener('deviceorientation', handleOrientation, true);
+      };
+    } 
+    // iOS devices will need explicit permission request via user interaction
+    else if (permissionGranted) {
+      window.addEventListener('deviceorientation', handleOrientation, true);
+      return () => {
+        window.removeEventListener('deviceorientation', handleOrientation, true);
+      };
+    }
+  }, [handleOrientation, permissionGranted]);
+
+  // Return a button for iOS to request permissions
+  if (isIOS && !permissionGranted) {
+    return (
+      <div className="ios-permission-prompt">
+        <button 
+          onClick={requestIOSPermission}
+          className="ios-permission-button"
+        >
+          Enable Tilt Detection
+        </button>
+        <p>Tap to enable motion sensors for the beer experience</p>
+      </div>
+    );
+  }
+
+  // For non-iOS or when permission is granted
+  return null;
 };
 
 export default TiltDetector; 

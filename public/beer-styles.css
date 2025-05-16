@@ -448,4 +448,225 @@ h1, h2, h3 {
 :-webkit-full-screen .fullscreen-button {
   top: 20px;
   right: 20px;
+}
+
+/* iOS-specific styles */
+.ios-app {
+  /* iOS needs special handling for viewport issues */
+  height: 100vh; 
+  /* 100vh on iOS includes the address bar in Safari, fix with viewport units */
+  height: -webkit-fill-available;
+  /* Prevent scrolling */
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  overflow: hidden;
+}
+
+/* iOS permission prompt */
+.ios-permission-prompt {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 248, 225, 0.95);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 20px;
+  text-align: center;
+}
+
+.ios-permission-button {
+  background: var(--primary-color);
+  color: white;
+  padding: 15px 30px;
+  border-radius: 999px;
+  border: none;
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 10px rgba(150, 80, 30, 0.3);
+}
+
+.ios-permission-prompt p {
+  font-size: 1rem;
+  color: var(--text-color);
+  max-width: 300px;
+  margin: 0 auto;
+}
+
+/* iOS fullscreen mode */
+html.ios-fullscreen,
+html.ios-fullscreen body,
+html.ios-fullscreen #root,
+html.ios-fullscreen .app-container {
+  height: 100% !important;
+  width: 100% !important;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  /* Ensure the browser chrome gets hidden on iOS */
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+/* iOS glass styling */
+.ios-glass {
+  /* More pronounced shadow for better visual effect on iOS */
+  box-shadow: 
+    0 15px 30px rgba(0, 0, 0, 0.15),
+    inset 0 0 15px rgba(255, 255, 255, 0.3);
+}
+
+/* iOS liquid styling */
+.ios-liquid {
+  /* Use transform3d for hardware acceleration on iOS */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  /* Ensure smooth transitions on iOS */
+  transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+  -webkit-transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* iOS bubbles */
+.ios-bubbles {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.bubble {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 50%;
+  opacity: 0;
+  animation: bubble-rise 2.5s ease-in-out infinite;
+}
+
+.bubble-1 {
+  width: 12px;
+  height: 12px;
+  left: 20%;
+  bottom: 10%;
+  animation-delay: 0.2s;
+}
+
+.bubble-2 {
+  width: 8px;
+  height: 8px;
+  left: 50%;
+  bottom: 20%;
+  animation-delay: 0.8s;
+}
+
+.bubble-3 {
+  width: 10px;
+  height: 10px;
+  left: 70%;
+  bottom: 15%;
+  animation-delay: 1.5s;
+}
+
+@keyframes bubble-rise {
+  0% { 
+    opacity: 0;
+    transform: translateY(0) scale(0.8);
+  }
+  20% {
+    opacity: 0.6;
+    transform: translateY(-10px) scale(1);
+  }
+  80% {
+    opacity: 0.4;
+    transform: translateY(-60px) scale(1.2);
+  }
+  100% { 
+    opacity: 0;
+    transform: translateY(-100px) scale(1);
+  }
+}
+
+/* iOS-specific button styles */
+.ios-button {
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  padding: 10px 15px;
+  font-weight: 500;
+}
+
+.ios-premium-button {
+  /* Use gradients that render better on iOS */
+  background: var(--primary-color);
+  /* Disable transitions that might cause jank on iOS Safari */
+  transition: none;
+  /* Add safe area bottom padding */
+  padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+}
+
+/* iOS landscape orientation fixes */
+@media (orientation: landscape) {
+  .ios-app {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  
+  .ios-app .header {
+    width: 100%;
+    padding: 10px 0;
+  }
+  
+  .ios-app .header h1 {
+    font-size: 1.5rem;
+    margin-bottom: 2px;
+  }
+  
+  .ios-app .header p {
+    font-size: 0.8rem;
+  }
+  
+  .ios-app .main-content {
+    height: calc(100% - 60px);
+    width: 100%;
+    flex-direction: row;
+  }
+  
+  .ios-container {
+    width: 70%;
+    height: 100%;
+  }
+  
+  .ios-app .progress-container {
+    width: 25%;
+    position: absolute;
+    right: 5%;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  
+  .ios-app .footer {
+    position: absolute;
+    bottom: env(safe-area-inset-bottom, 10px);
+    right: env(safe-area-inset-right, 10px);
+  }
+}
+
+/* Force the height to be correct on iOS */
+@supports (-webkit-touch-callout: none) {
+  .app-container {
+    height: -webkit-fill-available;
+  }
+  
+  .main-content {
+    height: -webkit-fill-available;
+  }
 } 
