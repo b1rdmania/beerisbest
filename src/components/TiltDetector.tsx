@@ -1,5 +1,5 @@
 import React, { useEffect, useCallback, useState } from 'react';
-import { isIOS, isMobile } from 'react-device-detect';
+import { isIOS } from 'react-device-detect';
 
 interface TiltDetectorProps {
   onTiltChange: (tiltData: { 

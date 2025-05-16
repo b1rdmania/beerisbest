@@ -1,8 +1,15 @@
 import { useState, useEffect } from "react";
-import { isIOS, isMobile } from "react-device-detect";
+import { isIOS } from "react-device-detect";
 import BeerGlass from "./BeerGlass";
 import TiltDetector from "./TiltDetector";
 import SoundEffects from "./SoundEffects";
+
+// TypeScript definition for screen.orientation.lock if not defined
+declare global {
+  interface ScreenOrientation {
+    lock?: (orientation: string) => Promise<void>;
+  }
+}
 
 const Home = () => {
   const [beerLevel, setBeerLevel] = useState(100); // 100% full
@@ -17,7 +24,7 @@ const Home = () => {
 
   // Check if screen orientation API is available
   useEffect(() => {
-    setCanLockScreen(!!screen.orientation && typeof screen.orientation.lock === 'function');
+    setCanLockScreen(!!screen.orientation && typeof (screen.orientation as any).lock === 'function');
     
     // Get initial orientation
     if (window.orientation !== undefined) {
@@ -42,10 +49,10 @@ const Home = () => {
     // Check if we're on iOS
     if (isIOS) {
       // iOS doesn't support true fullscreen, but we can try to lock orientation
-      if (canLockScreen) {
+      if (canLockScreen && (screen.orientation as any).lock) {
         try {
           // Try to lock to the current orientation
-          await screen.orientation.lock(
+          await (screen.orientation as any).lock(
             Math.abs(window.orientation || 0) === 90 ? 'landscape' : 'portrait'
           );
         } catch (error) {

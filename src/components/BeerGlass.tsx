@@ -1,10 +1,15 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, CSSProperties } from 'react';
 import { isIOS } from 'react-device-detect';
 
 interface BeerGlassProps {
   beerLevel: number; // Percentage 0-100
   isTilting: boolean; // True if device is tilted significantly
   tiltDirection?: { x: number, y: number }; // Direction of tilt (-1 to 1 for both x and y)
+}
+
+interface LiquidStyle extends CSSProperties {
+  WebkitTransform?: string;
+  WebkitBackfaceVisibility?: 'hidden' | 'visible';
 }
 
 const BeerGlass: React.FC<BeerGlassProps> = ({ beerLevel, isTilting, tiltDirection = { x: 0, y: 0 } }) => {
@@ -18,7 +23,7 @@ const BeerGlass: React.FC<BeerGlassProps> = ({ beerLevel, isTilting, tiltDirecti
   };
   
   // Calculate realistic liquid transform based on tilt direction
-  const calculateLiquidStyle = () => {
+  const calculateLiquidStyle = (): LiquidStyle => {
     // Create an array to hold our transform values
     const transforms = [];
     
