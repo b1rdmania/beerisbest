@@ -251,6 +251,7 @@ const Home = () => {
                 Math.abs(tiltVelocity?.y || 0), 0
               ), 1) : 0
             }
+          />
 
           {/* Fullscreen button - styled differently for iOS */}
           <button
