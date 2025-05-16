@@ -89,7 +89,7 @@ const SoundEffects: React.FC<SoundEffectsProps> = ({ soundType, tiltIntensity = 
     if (!audioRef.current || !userInteracted) return;
     
     if (audioRef.current.paused) {
-      audioRef.current.play().catch(e => {
+      audioRef.current.play().catch(_ => {
         // Silently catch the error to prevent console warnings
         // We'll try again when user interacts
       });
