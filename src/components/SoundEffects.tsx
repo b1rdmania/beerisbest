@@ -13,35 +13,80 @@ const SoundEffects: React.FC<SoundEffectsProps> = ({ soundType, tiltIntensity = 
   const heavyRef = useRef<HTMLAudioElement | null>(null);
   const gulpingRef = useRef<HTMLAudioElement | null>(null);
   const pouringRef = useRef<HTMLAudioElement | null>(null);
+  const bgAmbianceRef = useRef<HTMLAudioElement | null>(null);
   const [loaded, setLoaded] = useState(false);
+  
+  // Track whether we're currently playing sounds
+  const [isPlaying, setIsPlaying] = useState(false);
 
-  // Sound file paths
+  // Enhanced sound file paths with fallbacks
   const soundPaths = {
-    gentle: '/glug.mp3',
-    heavy: '/glug.mp3',
-    gulping: '/glug.mp3',
-    pouring: '/glug.mp3',
+    gentle: ['/gentle-pour.mp3', '/glug.mp3'],
+    heavy: ['/heavy-pour.mp3', '/glug.mp3'],
+    gulping: ['/gulping-sound.mp3', '/glug.mp3'],
+    pouring: ['/beer-pour.mp3', '/glug.mp3'],
+    ambiance: ['/bar-ambiance.mp3', '/ambient.mp3'],
   };
 
-  // Initialize and preload all audio elements
+  // Initialize and preload all audio elements with enhanced setup
   useEffect(() => {
     const initAudio = () => {
-      // Create all audio elements
-      gentleRef.current = new Audio(soundPaths.gentle);
-      heavyRef.current = new Audio(soundPaths.heavy);
-      gulpingRef.current = new Audio(soundPaths.gulping);
-      pouringRef.current = new Audio(soundPaths.pouring);
+      // Create all audio elements with fallback paths
+      gentleRef.current = new Audio(soundPaths.gentle[0]);
+      gentleRef.current.onerror = () => {
+        if (gentleRef.current) gentleRef.current.src = soundPaths.gentle[1];
+      };
       
-      // Configure audio settings
+      heavyRef.current = new Audio(soundPaths.heavy[0]);
+      heavyRef.current.onerror = () => {
+        if (heavyRef.current) heavyRef.current.src = soundPaths.heavy[1];
+      };
+      
+      gulpingRef.current = new Audio(soundPaths.gulping[0]);
+      gulpingRef.current.onerror = () => {
+        if (gulpingRef.current) gulpingRef.current.src = soundPaths.gulping[1];
+      };
+      
+      pouringRef.current = new Audio(soundPaths.pouring[0]);
+      pouringRef.current.onerror = () => {
+        if (pouringRef.current) pouringRef.current.src = soundPaths.pouring[1];
+      };
+      
+      // Add subtle background ambiance
+      bgAmbianceRef.current = new Audio(soundPaths.ambiance[0]);
+      bgAmbianceRef.current.onerror = () => {
+        if (bgAmbianceRef.current) bgAmbianceRef.current.src = soundPaths.ambiance[1];
+      };
+      
+      // Configure audio settings with better quality
       [gentleRef, heavyRef, gulpingRef, pouringRef].forEach(ref => {
         if (ref.current) {
           ref.current.volume = 0;
           ref.current.loop = true;
           
+          // Higher quality playback settings
+          ref.current.preservesPitch = false;
+          
           // Start loading
           ref.current.load();
         }
       });
+      
+      // Configure background ambiance separately
+      if (bgAmbianceRef.current) {
+        bgAmbianceRef.current.volume = 0.1; // Very subtle
+        bgAmbianceRef.current.loop = true;
+        bgAmbianceRef.current.load();
+        
+        // Auto-play background ambiance (will be muted on iOS until user interaction)
+        try {
+          bgAmbianceRef.current.play().catch(() => {
+            console.log('Background ambiance needs user interaction to play');
+          });
+        } catch (e) {
+          console.log('Could not auto-play ambiance sound');
+        }
+      }
       
       setLoaded(true);
     };
@@ -53,7 +98,7 @@ const SoundEffects: React.FC<SoundEffectsProps> = ({ soundType, tiltIntensity = 
     
     // Cleanup function
     return () => {
-      [gentleRef, heavyRef, gulpingRef, pouringRef].forEach(ref => {
+      [gentleRef, heavyRef, gulpingRef, pouringRef, bgAmbianceRef].forEach(ref => {
         if (ref.current) {
           ref.current.pause();
           ref.current.currentTime = 0;
@@ -62,58 +107,239 @@ const SoundEffects: React.FC<SoundEffectsProps> = ({ soundType, tiltIntensity = 
     };
   }, [loaded, soundPaths]);
 
-  // Handle sound playback based on current sound type and tilt intensity
+  // Handle sound playback based on current sound type and tilt intensity with smoother transitions
   useEffect(() => {
     if (!loaded) return;
     
     // Calculate volume based on tilt intensity (0-1)
     const adjustedVolume = Math.min(Math.max(tiltIntensity, 0), 1);
     
-    // Function to stop all sounds
-    const stopAllSounds = () => {
-      [gentleRef, heavyRef, gulpingRef, pouringRef].forEach(ref => {
-        if (ref.current) {
-          ref.current.pause();
-          ref.current.currentTime = 0;
-        }
-      });
+    // Function to smoothly transition volume
+    const applyVolumeTransition = (audioRef: React.RefObject<HTMLAudioElement>, targetVolume: number) => {
+      if (!audioRef.current) return;
+      
+      // If audio is playing, transition volume
+      if (!audioRef.current.paused) {
+        const currentVolume = audioRef.current.volume;
+        const volumeDiff = targetVolume - currentVolume;
+        
+        // Use RAF for smoother transitions
+        const startTime = performance.now();
+        const duration = 200; // ms
+        
+        const fadeAudio = (time: number) => {
+          const elapsed = time - startTime;
+          const ratio = Math.min(elapsed / duration, 1);
+          
+          if (audioRef.current) {
+            audioRef.current.volume = currentVolume + volumeDiff * ratio;
+          }
+          
+          if (ratio < 1) {
+            requestAnimationFrame(fadeAudio);
+          }
+        };
+        
+        requestAnimationFrame(fadeAudio);
+      } else {
+        // If not playing, just set volume directly
+        audioRef.current.volume = targetVolume;
+      }
     };
     
-    // First stop all sounds
-    stopAllSounds();
+    // Function to stop all sounds with a gentle fade out
+    const stopAllSounds = () => {
+      [gentleRef, heavyRef, gulpingRef, pouringRef].forEach(ref => {
+        if (ref.current && !ref.current.paused) {
+          // Fade out
+          applyVolumeTransition(ref, 0);
+          
+          // Stop after fade completes
+          setTimeout(() => {
+            if (ref.current && !ref.current.paused) {
+              ref.current.pause();
+              ref.current.currentTime = 0;
+            }
+          }, 200);
+        }
+      });
+      
+      setIsPlaying(false);
+    };
     
-    // Play the appropriate sound
+    // Adjust background ambient volume based on if other sounds are playing
+    if (bgAmbianceRef.current) {
+      if (soundType !== "none") {
+        applyVolumeTransition(bgAmbianceRef, 0.05); // Lower when other sounds play
+      } else {
+        applyVolumeTransition(bgAmbianceRef, 0.12); // Higher when no other sounds
+      }
+      
+      // Ensure ambiance is playing
+      if (bgAmbianceRef.current.paused) {
+        bgAmbianceRef.current.play().catch(e => console.warn("Ambient audio play failed:", e));
+      }
+    }
+    
+    // Play the appropriate sound with dynamic adjustments based on tilt intensity
     switch(soundType) {
       case "gentle":
         if (gentleRef.current) {
-          gentleRef.current.volume = adjustedVolume * 0.4; // Gentle sound is quieter
-          gentleRef.current.play().catch(e => console.warn("Audio play failed:", e));
+          // Gentle sound volume varies with tilt intensity
+          const volumeLevel = adjustedVolume * 0.4; // Gentle sound is quieter
+          
+          if (gentleRef.current.paused) {
+            gentleRef.current.volume = volumeLevel;
+            gentleRef.current.play().catch(e => console.warn("Audio play failed:", e));
+          } else {
+            applyVolumeTransition(gentleRef, volumeLevel);
+          }
+          
+          // Adjust playback rate slightly based on tilt intensity
+          gentleRef.current.playbackRate = 0.9 + (adjustedVolume * 0.2);
+          
+          setIsPlaying(true);
+          
+          // Stop other sounds
+          [heavyRef, gulpingRef, pouringRef].forEach(ref => {
+            if (ref.current && !ref.current.paused) {
+              applyVolumeTransition(ref, 0);
+              setTimeout(() => {
+                if (ref.current) {
+                  ref.current.pause();
+                  ref.current.currentTime = 0;
+                }
+              }, 200);
+            }
+          });
         }
         break;
       case "heavy":
         if (heavyRef.current) {
-          heavyRef.current.volume = adjustedVolume * 0.6;
-          heavyRef.current.play().catch(e => console.warn("Audio play failed:", e));
+          // Heavy sound has more volume range
+          const volumeLevel = adjustedVolume * 0.65;
+          
+          if (heavyRef.current.paused) {
+            heavyRef.current.volume = volumeLevel;
+            heavyRef.current.play().catch(e => console.warn("Audio play failed:", e));
+          } else {
+            applyVolumeTransition(heavyRef, volumeLevel);
+          }
+          
+          // Adjust playback rate based on tilt intensity for more realism
+          heavyRef.current.playbackRate = 0.95 + (adjustedVolume * 0.3);
+          
+          setIsPlaying(true);
+          
+          // Stop other sounds
+          [gentleRef, gulpingRef, pouringRef].forEach(ref => {
+            if (ref.current && !ref.current.paused) {
+              applyVolumeTransition(ref, 0);
+              setTimeout(() => {
+                if (ref.current) {
+                  ref.current.pause();
+                  ref.current.currentTime = 0;
+                }
+              }, 200);
+            }
+          });
         }
         break;
       case "gulping":
         if (gulpingRef.current) {
-          gulpingRef.current.volume = adjustedVolume * 0.8;
-          gulpingRef.current.play().catch(e => console.warn("Audio play failed:", e));
+          // Gulping sound is more intense
+          const volumeLevel = 0.3 + (adjustedVolume * 0.6);
+          
+          if (gulpingRef.current.paused) {
+            gulpingRef.current.volume = volumeLevel;
+            gulpingRef.current.play().catch(e => console.warn("Audio play failed:", e));
+          } else {
+            applyVolumeTransition(gulpingRef, volumeLevel);
+          }
+          
+          // Higher playback rate for intense gulping
+          gulpingRef.current.playbackRate = 1 + (adjustedVolume * 0.4);
+          
+          setIsPlaying(true);
+          
+          // Stop other sounds
+          [gentleRef, heavyRef, pouringRef].forEach(ref => {
+            if (ref.current && !ref.current.paused) {
+              applyVolumeTransition(ref, 0);
+              setTimeout(() => {
+                if (ref.current) {
+                  ref.current.pause();
+                  ref.current.currentTime = 0;
+                }
+              }, 200);
+            }
+          });
         }
         break;
       case "pouring":
         if (pouringRef.current) {
-          pouringRef.current.volume = 0.7; // Pouring is always the same volume
-          pouringRef.current.play().catch(e => console.warn("Audio play failed:", e));
+          // Pouring is always consistent volume
+          const volumeLevel = 0.75; 
+          
+          if (pouringRef.current.paused) {
+            pouringRef.current.volume = volumeLevel;
+            pouringRef.current.play().catch(e => console.warn("Audio play failed:", e));
+            
+            // Reset playback to start to ensure we hear the entire pouring sound
+            pouringRef.current.currentTime = 0;
+          } else {
+            applyVolumeTransition(pouringRef, volumeLevel);
+          }
+          
+          // Normal playback rate for pouring
+          pouringRef.current.playbackRate = 1;
+          
+          setIsPlaying(true);
+          
+          // Stop other sounds
+          [gentleRef, heavyRef, gulpingRef].forEach(ref => {
+            if (ref.current && !ref.current.paused) {
+              applyVolumeTransition(ref, 0);
+              setTimeout(() => {
+                if (ref.current) {
+                  ref.current.pause();
+                  ref.current.currentTime = 0;
+                }
+              }, 200);
+            }
+          });
         }
         break;
       case "none":
       default:
-        // No sound playing
+        // Fade out and stop all sounds
+        stopAllSounds();
         break;
     }
   }, [soundType, tiltIntensity, loaded]);
+
+  // Enable sounds on user interaction (needed for iOS Safari)
+  useEffect(() => {
+    const enableAudio = () => {
+      if (bgAmbianceRef.current && bgAmbianceRef.current.paused) {
+        bgAmbianceRef.current.volume = 0.12;
+        bgAmbianceRef.current.play().catch(() => {
+          console.log('Could not play ambiance sound');
+        });
+      }
+      
+      document.removeEventListener('click', enableAudio);
+      document.removeEventListener('touchstart', enableAudio);
+    };
+    
+    document.addEventListener('click', enableAudio);
+    document.addEventListener('touchstart', enableAudio);
+    
+    return () => {
+      document.removeEventListener('click', enableAudio);
+      document.removeEventListener('touchstart', enableAudio);
+    };
+  }, [loaded]);
 
   // This component doesn't render anything visible
   return null;

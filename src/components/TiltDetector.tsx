@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, useState } from 'react';
+import React, { useEffect, useCallback, useState, useRef } from 'react';
 import { isIOS } from 'react-device-detect';
 
 interface TiltDetectorProps {
@@ -8,6 +8,7 @@ interface TiltDetectorProps {
     gamma: number | null;
     isTiltedForward: boolean;
     tiltDirection: { x: number, y: number };
+    velocity: { x: number, y: number };
   }) => void;
 }
 
@@ -16,14 +17,41 @@ const TiltDetector: React.FC<TiltDetectorProps> = ({ onTiltChange }) => {
   const [permissionAttempted, setPermissionAttempted] = useState(false);
   const [usingMouseFallback, setUsingMouseFallback] = useState(false);
   const [orientationSupported, setOrientationSupported] = useState(true);
+  
+  // Store previous values for velocity calculation
+  const prevTiltRef = useRef<{ beta: number | null, gamma: number | null, timestamp: number }>({
+    beta: null,
+    gamma: null,
+    timestamp: Date.now()
+  });
+  
+  // Low-pass filter to reduce noise (weighted average)
+  const filterSensorData = (newValue: number, prevValue: number | null, alpha = 0.8): number => {
+    if (prevValue === null) return newValue;
+    return alpha * newValue + (1 - alpha) * prevValue;
+  };
+  
+  // Calculate velocity based on change over time
+  const calculateVelocity = (current: number | null, previous: number | null, timeDelta: number): number => {
+    if (current === null || previous === null) return 0;
+    // Calculate change per second, limit to reasonable range
+    return Math.max(-1, Math.min(1, (current - previous) / (timeDelta / 1000) / 180));
+  };
 
-  // Create a more robust orientation handler for iOS
+  // Create a more robust orientation handler with velocity calculation
   const handleOrientation = useCallback((event: DeviceOrientationEvent) => {
     // Ensure we have valid data
     if (event.beta === null || event.gamma === null) return;
     
+    const now = Date.now();
+    const timeDelta = now - prevTiltRef.current.timestamp;
+    
     let beta = event.beta; // Front-to-back tilt
     let gamma = event.gamma; // Left-to-right tilt
+    
+    // Apply low-pass filter for smoother data
+    beta = filterSensorData(beta, prevTiltRef.current.beta);
+    gamma = filterSensorData(gamma, prevTiltRef.current.gamma);
     
     // iOS-specific adjustments
     if (isIOS) {
@@ -45,6 +73,17 @@ const TiltDetector: React.FC<TiltDetectorProps> = ({ onTiltChange }) => {
       }
     }
     
+    // Calculate velocity (change per second)
+    const velocityX = calculateVelocity(gamma, prevTiltRef.current.gamma, timeDelta);
+    const velocityY = calculateVelocity(beta, prevTiltRef.current.beta, timeDelta);
+    
+    // Store current values for next velocity calculation
+    prevTiltRef.current = {
+      beta,
+      gamma,
+      timestamp: now
+    };
+    
     // Calculate if device is tilted forward enough to pour
     // For iOS, we need to be more precise with this calculation
     const isTiltedForward = beta > 45 && Math.abs(gamma) < 60;
@@ -62,12 +101,16 @@ const TiltDetector: React.FC<TiltDetectorProps> = ({ onTiltChange }) => {
       gamma,
       isTiltedForward,
       tiltDirection,
+      velocity: { x: velocityX, y: velocityY }
     });
   }, [onTiltChange]);
 
-  // Desktop fallback - use mouse position to simulate tilt
+  // Desktop fallback - use mouse position to simulate tilt with velocity
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (!usingMouseFallback) return;
+    
+    const now = Date.now();
+    const timeDelta = now - prevTiltRef.current.timestamp;
     
     // Convert mouse position to tilt angles
     const centerX = window.innerWidth / 2;
@@ -81,21 +124,37 @@ const TiltDetector: React.FC<TiltDetectorProps> = ({ onTiltChange }) => {
     const beta = normalizedY * 90; // -90 to 90 degrees
     const gamma = normalizedX * 90; // -90 to 90 degrees
     
+    // Apply smoothing filter
+    const filteredBeta = filterSensorData(beta, prevTiltRef.current.beta, 0.7);
+    const filteredGamma = filterSensorData(gamma, prevTiltRef.current.gamma, 0.7);
+    
+    // Calculate velocity
+    const velocityX = calculateVelocity(filteredGamma, prevTiltRef.current.gamma, timeDelta);
+    const velocityY = calculateVelocity(filteredBeta, prevTiltRef.current.beta, timeDelta);
+    
+    // Update previous values for next calculation
+    prevTiltRef.current = {
+      beta: filteredBeta,
+      gamma: filteredGamma,
+      timestamp: now
+    };
+    
     // Calculate if "device" is tilted forward enough to pour
-    const isTiltedForward = beta > 45 && Math.abs(gamma) < 60;
+    const isTiltedForward = filteredBeta > 45 && Math.abs(filteredGamma) < 60;
     
     // Calculate tilt direction for liquid physics
     const tiltDirection = {
-      x: Math.max(-1, Math.min(1, gamma / 90)),
-      y: Math.max(-1, Math.min(1, (beta - 90) / 90)),
+      x: Math.max(-1, Math.min(1, filteredGamma / 90)),
+      y: Math.max(-1, Math.min(1, (filteredBeta - 90) / 90)),
     };
     
     onTiltChange({
       alpha: 0,
-      beta,
-      gamma,
+      beta: filteredBeta,
+      gamma: filteredGamma,
       isTiltedForward,
       tiltDirection,
+      velocity: { x: velocityX, y: velocityY }
     });
   }, [onTiltChange, usingMouseFallback]);
 
@@ -130,6 +189,13 @@ const TiltDetector: React.FC<TiltDetectorProps> = ({ onTiltChange }) => {
     const handleOrientationChange = () => {
       // Force a re-render on orientation change
       console.log('Screen orientation changed:', window.orientation);
+      
+      // Reset velocity tracking on orientation change
+      prevTiltRef.current = {
+        beta: null,
+        gamma: null,
+        timestamp: Date.now()
+      };
     };
 
     window.addEventListener('orientationchange', handleOrientationChange);

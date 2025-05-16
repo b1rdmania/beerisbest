@@ -15,6 +15,7 @@ const Home = () => {
   const [beerLevel, setBeerLevel] = useState(100); // 100% full
   const [isTilting, setIsTilting] = useState(false);
   const [tiltDirection, setTiltDirection] = useState({ x: 0, y: 0 });
+  const [tiltVelocity, setTiltVelocity] = useState({ x: 0, y: 0 });
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [canLockScreen, setCanLockScreen] = useState(false);
   const [screenOrientation, setScreenOrientation] = useState<number | null>(null);
@@ -94,8 +95,9 @@ const Home = () => {
 
   // Handle tilt data from the TiltDetector with iOS adjustments
   const handleTilt = (tiltData: any) => {
-    // Store tilt direction for realistic liquid rendering
+    // Store tilt direction and velocity for realistic liquid rendering
     setTiltDirection(tiltData.tiltDirection);
+    setTiltVelocity(tiltData.velocity || { x: 0, y: 0 });
     
     // Calculate beta and gamma for use in conditionals
     const beta = Math.abs(tiltData.beta || 0);
@@ -119,8 +121,16 @@ const Home = () => {
             const reductionRate = Math.min(0.5, (gamma - 45) / 90);
             setBeerLevel((prev) => Math.max(0, prev - reductionRate));
             
-            // Set sound based on tilt intensity
-            setSoundType(gamma > 80 ? "gulping" : gamma > 60 ? "heavy" : "gentle");
+            // Set sound based on tilt intensity and motion velocity
+            const tiltIntensity = gamma / 90;
+            const motionIntensity = Math.abs(tiltData.velocity?.x || 0);
+            const combinedIntensity = tiltIntensity + motionIntensity * 0.5;
+            
+            setSoundType(
+              combinedIntensity > 0.8 ? "gulping" : 
+              combinedIntensity > 0.6 ? "heavy" : 
+              "gentle"
+            );
           } else {
             setIsTilting(false);
             setSoundType("none");
@@ -132,12 +142,24 @@ const Home = () => {
           
           // Only reduce beer if properly tilted forward
           if (beta > 45) {
-            // Reduce beer level based on tilt angle
-            const reductionRate = Math.min(0.5, (beta - 45) / 90);
+            // Reduce beer level based on tilt angle and movement velocity
+            const baseReductionRate = Math.min(0.5, (beta - 45) / 90);
+            // Enhance pour rate by adding velocity component
+            const velocityComponent = Math.abs(tiltData.velocity?.y || 0) * 0.2;
+            const reductionRate = baseReductionRate + velocityComponent;
+            
             setBeerLevel((prev) => Math.max(0, prev - reductionRate));
             
-            // Set sound effect based on tilt angle
-            setSoundType(beta > 80 ? "gulping" : beta > 60 ? "heavy" : "gentle");
+            // Set sound effect based on tilt angle and motion velocity
+            const tiltIntensity = beta / 90;
+            const motionIntensity = Math.abs(tiltData.velocity?.y || 0);
+            const combinedIntensity = tiltIntensity + motionIntensity * 0.5;
+            
+            setSoundType(
+              combinedIntensity > 0.8 ? "gulping" : 
+              combinedIntensity > 0.6 ? "heavy" : 
+              "gentle"
+            );
           } else {
             setSoundType("none");
           }
@@ -162,12 +184,24 @@ const Home = () => {
         
         // Only reduce beer level if properly tilted forward
         if (tiltAngle > 45) {
-          // Reduce beer level based on tilt angle
-          const reductionRate = Math.min(0.5, (tiltAngle - 45) / 90);
+          // Reduce beer level based on tilt angle and movement velocity
+          const baseReductionRate = Math.min(0.5, (tiltAngle - 45) / 90);
+          // Enhance pour rate by adding velocity component
+          const velocityComponent = Math.abs(tiltData.velocity?.y || 0) * 0.2;
+          const reductionRate = baseReductionRate + velocityComponent;
+          
           setBeerLevel((prev) => Math.max(0, prev - reductionRate));
 
-          // Set sound effect based on tilt angle
-          setSoundType(tiltAngle > 80 ? "gulping" : tiltAngle > 60 ? "heavy" : "gentle");
+          // Set sound effect based on tilt angle and velocity
+          const tiltIntensity = tiltAngle / 90;
+          const motionIntensity = Math.abs(tiltData.velocity?.y || 0);
+          const combinedIntensity = tiltIntensity + motionIntensity * 0.5;
+          
+          setSoundType(
+            combinedIntensity > 0.8 ? "gulping" : 
+            combinedIntensity > 0.6 ? "heavy" : 
+            "gentle"
+          );
         } else {
           setSoundType("none");
         }
@@ -200,6 +234,7 @@ const Home = () => {
             beerLevel={beerLevel} 
             isTilting={isTilting} 
             tiltDirection={tiltDirection}
+            velocity={tiltVelocity}
           />
 
           {/* Invisible tilt detector */}
@@ -208,7 +243,7 @@ const Home = () => {
           {/* Sound effects player */}
           <SoundEffects 
             soundType={soundType} 
-            tiltIntensity={isTilting ? Math.min(Math.max((Math.abs(tiltDirection.y) * 2), 0), 1) : 0}
+            tiltIntensity={isTilting ? Math.min(Math.max((Math.abs(tiltDirection.y) * 2) + Math.abs(tiltVelocity.y || 0), 0), 1) : 0}
           />
 
           {/* Fullscreen button - styled differently for iOS */}
