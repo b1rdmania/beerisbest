@@ -8,6 +8,8 @@
   --glass-highlight: rgba(255, 255, 255, 0.15);
   --glass-border: rgba(220, 220, 220, 0.4);
   --glass-color: rgba(240, 240, 240, 0.2);
+  --premium-gradient: linear-gradient(135deg, #fceabb 0%, #fccd4d 50%, #f8b500 51%, #fbdf93 100%);
+  --premium-shadow: 0 10px 25px rgba(150, 80, 30, 0.2);
 }
 
 *, *::before, *::after {
@@ -24,12 +26,16 @@ body {
   font-family: 'Montserrat', system-ui, -apple-system, sans-serif;
   min-height: 100vh;
   line-height: 1.6;
+  overflow: hidden;
 }
 
 #root {
-  max-width: 1200px;
+  max-width: 100%;
+  width: 100vw;
+  height: 100vh;
   margin: 0 auto;
-  padding: 20px;
+  padding: 0;
+  overflow: hidden;
 }
 
 h1, h2, h3 {
@@ -41,57 +47,35 @@ h1, h2, h3 {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  height: 100%;
+  width: 100%;
+  background: radial-gradient(ellipse at center, rgba(255,248,225,1) 0%, rgba(251,234,188,1) 100%);
 }
 
-.header {
-  text-align: center;
-  padding: 30px 0;
-  position: relative;
-}
-
-.header:after {
-  content: '';
-  display: block;
-  width: 100px;
-  height: 2px;
-  background: var(--accent-color);
-  margin: 15px auto 0;
-}
-
-.header h1 {
-  font-size: 3rem;
-  font-weight: 700;
-  color: var(--primary-color);
-  margin-bottom: 8px;
-  text-shadow: 1px 1px 2px rgba(0,0,0,0.05);
-}
-
-.header p {
-  font-size: 1.1rem;
-  color: var(--light-text);
-  max-width: 500px;
-  margin: 0 auto;
-}
-
-.main-content {
+/* Premium layout styles */
+.premium-layout {
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 20px;
+  width: 100%;
+  height: 100%;
+  position: relative;
 }
 
 .glass-container {
   position: relative;
-  height: 65vh;
+  height: 75vh;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 40px 0;
+  width: 100%;
 }
 
-/* Beer glass with improved design */
+/* Beer glass with premium design */
 .beer-glass {
   width: 180px;
   height: 350px;
@@ -105,6 +89,11 @@ h1, h2, h3 {
     0 10px 25px rgba(0,0,0,0.1),
     inset 0 0 15px rgba(255,255,255,0.2);
   perspective: 500px;
+  /* Premium glass effect */
+  background: linear-gradient(to right, 
+    rgba(255,255,255,0.1) 0%, 
+    rgba(255,255,255,0.05) 50%, 
+    rgba(255,255,255,0.1) 100%);
 }
 
 /* Glass highlights */
@@ -128,7 +117,7 @@ h1, h2, h3 {
   bottom: 0;
   left: 0;
   right: 0;
-  /* Fallback color gradient if image fails to load */
+  /* Enhanced premium beer gradient */
   background: linear-gradient(to bottom, 
     rgba(252, 191, 29, 1) 0%,
     rgba(242, 175, 20, 1) 50%,
@@ -141,6 +130,8 @@ h1, h2, h3 {
   box-shadow: 
     inset 0 5px 10px rgba(0,0,0,0.2),
     0 -5px 5px rgba(255, 220, 150, 0.2);
+  /* Enhanced beer liquid effect */
+  filter: brightness(1.1) contrast(1.05);
 }
 
 /* Beer bubbles animation */
@@ -204,17 +195,22 @@ h1, h2, h3 {
 /* Beer level indicator */
 .progress-container {
   width: 100%;
-  max-width: 400px;
-  margin: 30px auto 15px;
+  max-width: 300px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 10;
 }
 
 .progress-bar {
   width: 100%;
-  height: 10px;
+  height: 12px;
   background-color: rgba(240, 240, 240, 0.5);
   border-radius: 99px;
   overflow: hidden;
   box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .progress-level {
@@ -223,41 +219,50 @@ h1, h2, h3 {
   background: linear-gradient(to right, var(--primary-color), var(--accent-color));
   transition: width 0.4s cubic-bezier(0.22, 1, 0.36, 1);
   box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  /* Premium gradient for progress bar */
+  background-image: var(--premium-gradient);
 }
 
 .progress-text {
   text-align: center;
-  font-size: 1.1rem;
+  font-size: 0.9rem;
   color: var(--primary-color);
-  font-weight: 500;
-  margin-top: 15px;
+  font-weight: 600;
+  margin-top: 10px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
 .footer {
-  padding: 30px 0;
+  padding: 20px 0;
   text-align: center;
 }
 
 .premium-button {
   background: linear-gradient(to bottom, var(--primary-color), #7a4019);
   color: #fff;
-  padding: 14px 32px;
+  padding: 14px 30px;
   border-radius: 999px;
   border: none;
   font-size: 1.1rem;
   font-weight: 600;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
   cursor: pointer;
   box-shadow: 0 4px 10px rgba(150, 80, 30, 0.3);
   transition: all 0.3s ease;
   outline: none;
   position: relative;
   overflow: hidden;
+  /* Premium button styles */
+  background-image: var(--premium-gradient);
+  box-shadow: var(--premium-shadow);
 }
 
 .premium-button:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 15px rgba(150, 80, 30, 0.4);
+  filter: brightness(1.05);
 }
 
 .premium-button:active {
@@ -286,13 +291,9 @@ h1, h2, h3 {
 }
 
 /* Responsive adjustments */
-@media (min-width: 768px) {
-  .header h1 {
-    font-size: 3.5rem;
-  }
-  
+@media (min-width: 768px) {  
   .main-content {
-    padding: 40px;
+    padding: 0;
   }
   
   .beer-glass {
@@ -304,153 +305,44 @@ h1, h2, h3 {
 /* Fullscreen button styling */
 .fullscreen-button {
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: 20px;
+  right: 20px;
   background: rgba(150, 80, 30, 0.7);
   color: white;
   border: none;
   border-radius: 5px;
-  padding: 8px 12px;
+  padding: 8px 14px;
   font-size: 0.9rem;
+  font-weight: 500;
   cursor: pointer;
   z-index: 10;
   transition: background-color 0.2s;
+  /* Premium fullscreen button */
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .fullscreen-button:hover {
   background: rgba(150, 80, 30, 0.9);
 }
 
-/* Improved mobile styles */
-@media (max-width: 767px) {
-  body {
-    overflow: hidden; /* Prevent scrolling on mobile */
-  }
-  
-  #root {
-    padding: 10px;
-    height: 100vh;
-    width: 100vw;
-    max-width: 100%;
-    overflow: hidden;
-  }
-  
-  .app-container {
-    height: 100%;
-    width: 100%;
-    padding: 0;
-    overflow: hidden;
-  }
-  
-  .header {
-    padding: 15px 0;
-  }
-  
-  .header h1 {
-    font-size: 1.8rem;
-  }
-  
-  .header p {
-    font-size: 0.9rem;
-  }
-  
-  .main-content {
-    padding: 10px;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    height: calc(100% - 160px); /* Adjust based on header/footer height */
-  }
-  
-  .glass-container {
-    height: 60vh;
-    flex: 1;
-    padding: 20px 0;
-  }
-  
-  .beer-glass {
-    width: 150px;
-    height: 280px;
-  }
-  
-  .progress-container {
-    margin: 15px auto;
-  }
-  
-  .footer {
-    padding: 15px 0;
-  }
-  
-  .premium-button {
-    padding: 10px 24px;
-    font-size: 1rem;
-  }
-  
-  /* For devices in landscape mode */
-  @media (orientation: landscape) {
-    .app-container {
-      flex-direction: row;
-      flex-wrap: wrap;
-    }
-    
-    .header {
-      width: 100%;
-      padding: 5px 0;
-    }
-    
-    .main-content {
-      flex-direction: row;
-      width: 70%;
-      height: calc(100% - 60px);
-      padding: 0;
-    }
-    
-    .glass-container {
-      height: 100%;
-      width: 100%;
-    }
-    
-    .beer-glass {
-      height: 70vh;
-      width: 120px;
-    }
-    
-    .progress-container {
-      width: 20%;
-      position: absolute;
-      right: 10px;
-      top: 50%;
-      transform: translateY(-50%);
-    }
-    
-    .footer {
-      position: absolute;
-      bottom: 10px;
-      right: 10px;
-      padding: 0;
-    }
-  }
+/* More premium ambient background */
+body:before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 50% 10%, rgba(255, 248, 225, 0.8) 0%, rgba(252, 232, 178, 0.4) 50%, rgba(251, 223, 147, 0.2) 100%);
+  z-index: -1;
 }
 
-/* Fullscreen mode adjustments */
-:fullscreen .app-container,
-:-webkit-full-screen .app-container {
-  background: linear-gradient(135deg, #fff8e1, var(--secondary-color));
-  padding: 20px;
-}
-
-:fullscreen .beer-glass,
-:-webkit-full-screen .beer-glass {
-  transform: scale(1.2);
-}
-
-:fullscreen .fullscreen-button,
-:-webkit-full-screen .fullscreen-button {
-  top: 20px;
-  right: 20px;
-}
-
-/* iOS-specific styles */
+/* iOS-specific styles - keep all of these */
 .ios-app {
   /* iOS needs special handling for viewport issues */
   height: 100vh; 
@@ -635,7 +527,7 @@ html.ios-fullscreen .app-container {
   }
   
   .ios-app .main-content {
-    height: calc(100% - 60px);
+    height: 100%;
     width: 100%;
     flex-direction: row;
   }
@@ -669,4 +561,122 @@ html.ios-fullscreen .app-container {
   .main-content {
     height: -webkit-fill-available;
   }
+}
+
+/* Improved mobile styles */
+@media (max-width: 767px) {
+  body {
+    overflow: hidden;
+  }
+  
+  #root {
+    padding: 0;
+    height: 100vh;
+    width: 100vw;
+    max-width: 100%;
+    overflow: hidden;
+  }
+  
+  .app-container {
+    height: 100%;
+    width: 100%;
+    padding: 0;
+    overflow: hidden;
+  }
+  
+  .main-content {
+    padding: 10px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+  
+  .glass-container {
+    height: 70vh;
+    flex: 1;
+    padding: 20px 0;
+  }
+  
+  .beer-glass {
+    width: 150px;
+    height: 280px;
+  }
+  
+  .progress-container {
+    margin: 15px auto;
+  }
+  
+  .footer {
+    padding: 15px 0;
+  }
+  
+  .premium-button {
+    padding: 10px 24px;
+    font-size: 1rem;
+  }
+  
+  /* For devices in landscape mode */
+  @media (orientation: landscape) {
+    .app-container {
+      flex-direction: row;
+      flex-wrap: wrap;
+    }
+    
+    .main-content {
+      flex-direction: row;
+      width: 100%;
+      height: 100%;
+      padding: 0;
+    }
+    
+    .glass-container {
+      height: 100%;
+      width: 100%;
+    }
+    
+    .beer-glass {
+      height: 70vh;
+      width: 120px;
+    }
+    
+    .progress-container {
+      width: 20%;
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+    
+    .footer {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      padding: 0;
+    }
+  }
+}
+
+/* Fullscreen mode adjustments */
+:fullscreen .app-container,
+:-webkit-full-screen .app-container {
+  background: radial-gradient(ellipse at center, rgba(255,248,225,1) 0%, rgba(251,234,188,0.95) 100%);
+  padding: 0;
+}
+
+:fullscreen .beer-glass,
+:-webkit-full-screen .beer-glass {
+  transform: scale(1.2);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+
+:fullscreen .fullscreen-button,
+:-webkit-full-screen .fullscreen-button {
+  top: 20px;
+  right: 20px;
+}
+
+/* Premium fullscreen mode */
+.fullscreen-mode .app-container {
+  background: radial-gradient(ellipse at center, rgba(255,248,225,1) 0%, rgba(251,223,147,0.95) 100%);
 } 

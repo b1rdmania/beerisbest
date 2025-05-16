@@ -184,14 +184,8 @@ const Home = () => {
 
   return (
     <div className={`app-container ${isIOS ? 'ios-app' : ''} ${isFullscreen ? 'fullscreen-mode' : ''}`}>
-      {/* Header */}
-      <header className="header">
-        <h1>Premium Beer Experience</h1>
-        <p>Tilt your device to enjoy our artisanal virtual beer</p>
-      </header>
-
-      {/* Main content */}
-      <main className="main-content">
+      {/* Main content - Removed header to focus on immersive experience */}
+      <main className="main-content premium-layout">
         {/* Beer glass container */}
         <div className={`glass-container ${isIOS ? 'ios-container' : ''}`}>
           <BeerGlass 
@@ -212,7 +206,7 @@ const Home = () => {
             className={`fullscreen-button ${isIOS ? 'ios-button' : ''}`}
             aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
           >
-            {isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+            {isFullscreen ? "Exit" : "Fullscreen"}
           </button>
         </div>
 
@@ -226,8 +220,8 @@ const Home = () => {
           </div>
           <p className="progress-text">
             {beerLevel > 0
-              ? `Beer remaining: ${Math.round(beerLevel)}%`
-              : "Your glass is empty! Time for a refill."}
+              ? `${Math.round(beerLevel)}%`
+              : "Empty! Refill?"}
           </p>
         </div>
       </main>
@@ -238,7 +232,7 @@ const Home = () => {
           onClick={handleRefill}
           className={`premium-button ${isIOS ? 'ios-premium-button' : ''}`}
         >
-          Refill Beer
+          Refill
         </button>
       </footer>
     </div>
