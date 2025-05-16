@@ -1,66 +1,89 @@
-# React + TypeScript + Vite
+# Premium Beer Experience 🍺
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Experience the virtual joy of drinking beer with this interactive web application. Tilt your device to drink, watch the beer level change in real-time, and enjoy immersive sound effects.
 
-Currently, two official plugins are available:
+**[Live Demo](https://beerisbest2.vercel.app/)**
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+![Premium Beer App Screenshot](public/beer.jpg)
 
-## Expanding the ESLint configuration
+## Features
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- **Interactive Tilting**: Tilt your device to simulate drinking the beer
+- **Realistic Beer Visualization**: Beautifully rendered beer glass with foam and liquid physics
+- **Responsive Design**: Looks great on mobile devices and desktops
+- **Dynamic Sound Effects**: Different sounds based on how you tilt (gentle sips vs. big gulps)
+- **Premium User Interface**: Sophisticated design with elegant animations
+- **No Installation Required**: Works directly in your browser
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+## How to Use
+
+1. Visit the [Live Demo](https://beerisbest2.vercel.app/) or run locally
+2. Allow device orientation access when prompted (for mobile devices)
+3. Tilt your device forward (like drinking) to see the beer level go down
+4. Use the "Refill Beer" button when empty
+5. Enjoy the realistic sound effects!
+
+## Technology Stack
+
+- **React**: Frontend UI library
+- **TypeScript**: Type-safe JavaScript
+- **Vite**: Fast build tooling
+- **DeviceOrientation API**: For detecting device tilt
+- **CSS Animations**: For fluid beer movement
+- **Web Audio API**: For sound effects
+
+## Development
+
+### Prerequisites
+
+- Node.js 18+ and npm
+
+### Local Setup
+
+```bash
+# Clone the repository
+git clone https://github.com/b1rdmania/beerisbest.git
+cd beerisbest
+
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Building for Production
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+```bash
+# Create optimized production build
+npm run build
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
+# Preview production build
+npm run preview
 ```
 
-## React + Vite + Tailwind CSS Version
+## Mobile Testing Tips
 
-This section details the current React-based application.
+- For best experience, use a mobile device with gyroscope/accelerometer
+- If testing on desktop, use Chrome DevTools device emulation with accelerometer support
+- Allow permissions for device orientation when prompted
 
-<!-- Trigger Vercel redeploy -->
+## Browser Compatibility
 
-### Features (Planned)
+- Chrome (Android/iOS/Desktop): Full support
+- Safari (iOS 13+): Full support
+- Firefox: Partial support (may require enabling device orientation in settings)
+- Edge: Full support
 
-<!-- Trigger Vercel redeploy again -->
+## Credits
 
-*   **Beer Glass Visualization**: Display a visual representation of a beer glass.
+- Beer texture image: Public domain
+- Sound effects: Custom recorded
+
+## License
+
+MIT License
+
+---
+
+Developed with ❤️ by [b1rdmania](https://github.com/b1rdmania)
