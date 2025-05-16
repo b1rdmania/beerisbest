@@ -679,4 +679,75 @@ html.ios-fullscreen .app-container {
 /* Premium fullscreen mode */
 .fullscreen-mode .app-container {
   background: radial-gradient(ellipse at center, rgba(255,248,225,1) 0%, rgba(251,223,147,0.95) 100%);
+}
+
+/* Enhanced animations for a more premium experience */
+@keyframes droplet-fall {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 0.7;
+  }
+  70% {
+    opacity: 0.9;
+    transform: translateY(300%) scale(1.1);
+  }
+  100% {
+    transform: translateY(500%) scale(0.8);
+    opacity: 0;
+  }
+}
+
+/* Enhanced bubble animation */
+@keyframes bubble-rise {
+  0% {
+    transform: translateY(0) scale(0.8);
+    opacity: 0.3;
+  }
+  20% {
+    opacity: 0.8;
+    transform: translateY(-30px) translateX(-5px) scale(1);
+  }
+  80% {
+    opacity: 0.6;
+    transform: translateY(-100px) translateX(5px) scale(0.9);
+  }
+  100% {
+    transform: translateY(-130px) translateX(0) scale(0.7);
+    opacity: 0;
+  }
+}
+
+/* Improved beer wave animation with more natural movement */
+@keyframes beer-wave {
+  0% {
+    transform: translateX(-15px) translateY(2px);
+  }
+  25% {
+    transform: translateX(-5px) translateY(0px);
+  }
+  50% {
+    transform: translateX(5px) translateY(3px);
+  }
+  75% {
+    transform: translateX(15px) translateY(1px);
+  }
+  100% {
+    transform: translateX(-15px) translateY(2px);
+  }
+}
+
+/* Add mouse-based tilt support for desktop */
+.desktop-control {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.2);
+  padding: 10px 20px;
+  border-radius: 8px;
+  backdrop-filter: blur(5px);
+  font-size: 0.9rem;
+  color: #96501e;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 100;
 } 

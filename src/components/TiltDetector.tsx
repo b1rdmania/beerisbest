@@ -14,6 +14,8 @@ interface TiltDetectorProps {
 const TiltDetector: React.FC<TiltDetectorProps> = ({ onTiltChange }) => {
   const [permissionGranted, setPermissionGranted] = useState(false);
   const [permissionAttempted, setPermissionAttempted] = useState(false);
+  const [usingMouseFallback, setUsingMouseFallback] = useState(false);
+  const [orientationSupported, setOrientationSupported] = useState(true);
 
   // Create a more robust orientation handler for iOS
   const handleOrientation = useCallback((event: DeviceOrientationEvent) => {
@@ -63,6 +65,40 @@ const TiltDetector: React.FC<TiltDetectorProps> = ({ onTiltChange }) => {
     });
   }, [onTiltChange]);
 
+  // Desktop fallback - use mouse position to simulate tilt
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (!usingMouseFallback) return;
+    
+    // Convert mouse position to tilt angles
+    const centerX = window.innerWidth / 2;
+    const centerY = window.innerHeight / 2;
+    
+    // Calculate normalized position (-1 to 1)
+    const normalizedX = (e.clientX - centerX) / (window.innerWidth / 2);
+    const normalizedY = (e.clientY - centerY) / (window.innerHeight / 2);
+    
+    // Convert to device orientation angles
+    const beta = normalizedY * 90; // -90 to 90 degrees
+    const gamma = normalizedX * 90; // -90 to 90 degrees
+    
+    // Calculate if "device" is tilted forward enough to pour
+    const isTiltedForward = beta > 45 && Math.abs(gamma) < 60;
+    
+    // Calculate tilt direction for liquid physics
+    const tiltDirection = {
+      x: Math.max(-1, Math.min(1, gamma / 90)),
+      y: Math.max(-1, Math.min(1, (beta - 90) / 90)),
+    };
+    
+    onTiltChange({
+      alpha: 0,
+      beta,
+      gamma,
+      isTiltedForward,
+      tiltDirection,
+    });
+  }, [onTiltChange, usingMouseFallback]);
+
   // Handle iOS permission more robustly
   const requestIOSPermission = useCallback(async () => {
     if (!permissionAttempted) {
@@ -102,23 +138,74 @@ const TiltDetector: React.FC<TiltDetectorProps> = ({ onTiltChange }) => {
     };
   }, []);
 
+  // Check for device orientation support on mount
+  useEffect(() => {
+    // First try to determine if we need to fall back to mouse control
+    const checkOrientationSupport = () => {
+      // If we're on a desktop or device orientation is not supported
+      if (window.DeviceOrientationEvent === undefined) {
+        setOrientationSupported(false);
+        setUsingMouseFallback(true);
+        return;
+      }
+      
+      // Try to detect if orientation events are actually firing
+      let eventFired = false;
+      
+      const testHandler = () => {
+        eventFired = true;
+        window.removeEventListener('deviceorientation', testHandler);
+      };
+      
+      window.addEventListener('deviceorientation', testHandler, true);
+      
+      // If no event after 1 second, fall back to mouse
+      setTimeout(() => {
+        if (!eventFired) {
+          setOrientationSupported(false);
+          setUsingMouseFallback(true);
+        }
+      }, 1000);
+    };
+    
+    checkOrientationSupport();
+  }, []);
+
   // Setup orientation listening
   useEffect(() => {
-    // Automatic setup for non-iOS devices
-    if (!isIOS) {
+    // If using mouse fallback, set up mouse listeners
+    if (usingMouseFallback) {
+      window.addEventListener('mousemove', handleMouseMove);
+      
+      // Add a helpful message for desktop users
+      const desktopControlElem = document.createElement('div');
+      desktopControlElem.className = 'desktop-control';
+      desktopControlElem.textContent = 'Move your mouse to tilt the glass';
+      document.body.appendChild(desktopControlElem);
+      
+      return () => {
+        window.removeEventListener('mousemove', handleMouseMove);
+        if (desktopControlElem.parentNode) {
+          document.body.removeChild(desktopControlElem);
+        }
+      };
+    }
+  
+    // Automatic setup for non-iOS devices that support orientation
+    if (!isIOS && orientationSupported) {
       window.addEventListener('deviceorientation', handleOrientation, true);
       return () => {
         window.removeEventListener('deviceorientation', handleOrientation, true);
       };
     } 
     // iOS devices will need explicit permission request via user interaction
-    else if (permissionGranted) {
+    else if (isIOS && permissionGranted) {
       window.addEventListener('deviceorientation', handleOrientation, true);
       return () => {
         window.removeEventListener('deviceorientation', handleOrientation, true);
       };
     }
-  }, [handleOrientation, permissionGranted]);
+  }, [handleOrientation, permissionGranted, usingMouseFallback, handleMouseMove, orientationSupported]);
 
   // Return a button for iOS to request permissions
   if (isIOS && !permissionGranted) {
