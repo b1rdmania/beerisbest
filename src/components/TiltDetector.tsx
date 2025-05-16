@@ -14,7 +14,6 @@ interface TiltDetectorProps {
 
 const TiltDetector: React.FC<TiltDetectorProps> = ({ onTiltChange }) => {
   const [permissionGranted, setPermissionGranted] = useState(false);
-  const [permissionAttempted, setPermissionAttempted] = useState(false);
   const [usingMouseFallback, setUsingMouseFallback] = useState(false);
   const [orientationSupported, setOrientationSupported] = useState(true);
   
@@ -160,7 +159,6 @@ const TiltDetector: React.FC<TiltDetectorProps> = ({ onTiltChange }) => {
 
   // Handle iOS permission more robustly
   const requestIOSPermission = useCallback(async () => {
-    setPermissionAttempted(true);
     try {
       if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
         const permission = await (DeviceOrientationEvent as any).requestPermission();
