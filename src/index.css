@@ -2,22 +2,43 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Beer glass animation keyframes - slower, more realistic wave */
+/* Beer glass animation keyframes - more natural liquid wave with curved edges */
 @keyframes beer-wave {
   0% {
-    border-radius: 35% 65% 60% 40% / 50% 35% 65% 50%;
+    border-radius: 35% 65% 0 0 / 50% 35% 0 0;
+    transform: translate(0, 0);
   }
   25% {
-    border-radius: 40% 60% 35% 65% / 40% 45% 55% 60%;
+    border-radius: 40% 60% 0 0 / 40% 45% 0 0;
+    transform: translate(-1px, 1px);
   }
   50% {
-    border-radius: 55% 45% 55% 45% / 60% 55% 45% 40%;
+    border-radius: 55% 45% 0 0 / 60% 55% 0 0;
+    transform: translate(0, 2px);
   }
   75% {
-    border-radius: 60% 40% 70% 30% / 45% 60% 40% 55%;
+    border-radius: 60% 40% 0 0 / 45% 60% 0 0;
+    transform: translate(1px, 1px);
   }
   100% {
-    border-radius: 35% 65% 60% 40% / 50% 35% 65% 50%;
+    border-radius: 35% 65% 0 0 / 50% 35% 0 0;
+    transform: translate(0, 0);
+  }
+}
+
+/* Gentle sloshing animation for beer when tilting */
+@keyframes beer-slosh {
+  0% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(2%);
+  }
+  75% {
+    transform: translateX(-2%);
+  }
+  100% {
+    transform: translateX(0);
   }
 }
 
@@ -85,6 +106,19 @@
   }
 }
 
+/* Foam jiggle animation */
+@keyframes foam-jiggle {
+  0% {
+    transform: scaleX(1);
+  }
+  50% {
+    transform: scaleX(1.02);
+  }
+  100% {
+    transform: scaleX(1);
+  }
+}
+
 /* Condensation drop animation - slower for realism */
 @keyframes droplet-fall {
   0% {
@@ -119,6 +153,22 @@
   border-radius: 3% 3% 0 0;
 }
 
+/* Natural beer liquid appearance */
+.beer-liquid {
+  border-radius: 15% 15% 0 0 / 15% 15% 0 0;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+}
+
+.beer-liquid.tilting {
+  animation: beer-slosh 2s ease-in-out infinite;
+}
+
+/* Beer substrate (base color layer) */
+.beer-substrate {
+  border-radius: 5px 5px 0 0;
+}
+
 /* Glass left/right tilt classes for highlighting the drinking edge */
 .beer-glass.tilt-left .glass-mouth-left {
   opacity: 0.8;
@@ -126,6 +176,11 @@
 
 .beer-glass.tilt-right .glass-mouth-right {
   opacity: 0.8;
+}
+
+/* Beer foam specific styles */
+.beer-foam {
+  animation: foam-jiggle 4s ease-in-out infinite;
 }
 
 /* iOS specific styles */

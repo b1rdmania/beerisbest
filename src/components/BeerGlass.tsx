@@ -267,6 +267,15 @@ const BeerGlass: React.FC<BeerGlassProps> = ({
       rgba(209, 142, 12, 0.3) 100%
     )` : 'none';
     
+    // Calculate the border radius of the liquid based on tilt
+    // More pronounced curve at rest, flatter when tilting heavily
+    const topCurve = isTiltingTowardMouth ? 
+      `${10 - Math.abs(adjustedTiltDirection.x) * 5}% ${10 - Math.abs(adjustedTiltDirection.x) * 5}% 0 0` :
+      '15% 15% 0 0';
+    
+    // Create a meniscus effect - the curved beer surface where it touches the glass
+    const meniscusOpacity = isTiltingTowardMouth ? 0.5 - Math.abs(adjustedTiltDirection.x) * 0.3 : 0.5;
+    
     return {
       height: `${visualBeerLevel}%`,
       transformOrigin: transformOrigin,
@@ -275,9 +284,10 @@ const BeerGlass: React.FC<BeerGlassProps> = ({
       // Add a visual effect to the liquid's top edge when tilted
       borderTop: visualBeerLevel > 0 && isTilting ? '2px solid rgba(255,220,150,0.7)' : 'none',
       // Enhanced shadow for more realistic depth
-      boxShadow: isTilting && visualBeerLevel > 0 
-        ? `inset 0px 5px 15px rgba(0,0,0,${0.15 + Math.abs(adjustedTiltDirection.x) * 0.2})` 
-        : 'none',
+      boxShadow: `
+        inset 0px 5px 15px rgba(0,0,0,${0.15 + Math.abs(adjustedTiltDirection.x) * 0.2}),
+        inset 0px -10px 10px -10px rgba(255,255,255,0.1)
+      `,
       // Wave animation strength tied to motion
       animationName: waveStrength > 0.1 ? 'beer-wave' : 'none',
       animationDuration: '3s', // Slower wave animation
@@ -291,6 +301,22 @@ const BeerGlass: React.FC<BeerGlassProps> = ({
       backgroundImage: sideRiseEffect,
       backgroundSize: '100% 100%',
       backgroundBlendMode: 'overlay',
+      // Natural curved liquid top surface
+      borderRadius: topCurve,
+      // Make the beer more rounded on the sides for a more natural look
+      borderLeft: '4px solid transparent',
+      borderRight: '4px solid transparent',
+      // Give the beer a slight gradient for more depth
+      background: `
+        linear-gradient(
+          to bottom, 
+          rgba(240, 180, 50, 0.8) 0%, 
+          rgba(209, 142, 12, 0.7) 30%,
+          rgba(180, 120, 5, 0.8) 100%
+        )
+      `,
+      // Adjust the opacity for better realism
+      opacity: 0.9,
     };
   };
   
@@ -459,18 +485,39 @@ const BeerGlass: React.FC<BeerGlassProps> = ({
         />
       ))}
       
-      {/* Beer substrate - gives the beer its rich color */}
+      {/* Beer substrate - gives the beer its rich color with gradient */}
       <div
         className="beer-substrate"
         style={{
           position: 'absolute',
           bottom: 0,
-          left: 0,
-          right: 0,
+          left: '2%',
+          right: '2%',
           height: `${visualBeerLevel}%`,
           background: 'linear-gradient(to bottom, rgba(209, 142, 12, 0.2) 0%, rgba(209, 142, 12, 0.4) 100%)',
           zIndex: 1,
-          transition: 'height 0.8s cubic-bezier(0.22, 1, 0.36, 1)'
+          transition: 'height 0.8s cubic-bezier(0.22, 1, 0.36, 1)',
+          borderRadius: '5px 5px 0 0',
+          boxShadow: 'inset 0 0 10px rgba(0,0,0,0.2)'
+        }}
+      />
+      
+      {/* Beer meniscus effect - the curved edge where beer meets glass */}
+      <div
+        className="beer-meniscus"
+        style={{
+          position: 'absolute',
+          bottom: `${visualBeerLevel}%`,
+          left: 0,
+          right: 0,
+          height: '8px',
+          background: 'linear-gradient(to bottom, rgba(255,220,130,0.3), transparent)',
+          zIndex: 2,
+          borderRadius: '100% 100% 0 0 / 200% 200% 0 0',
+          opacity: visualBeerLevel > 5 ? 0.7 : 0,
+          transition: 'bottom 0.8s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.5s ease',
+          transform: `scaleY(${isTilting ? 0.5 : 1})`,
+          pointerEvents: 'none'
         }}
       />
       
@@ -508,12 +555,29 @@ const BeerGlass: React.FC<BeerGlassProps> = ({
         }}
       />
       
-      {/* Beer Liquid */}
+      {/* Beer Liquid - with curved natural appearance */}
       <div
         ref={liquidRef}
         className={`beer-liquid ${isIOS ? 'ios-liquid' : ''} ${isTilting ? 'tilting' : ''}`}
         style={calculateLiquidStyle()}
       >
+        {/* Beer surface highlight for realism */}
+        <div 
+          className="beer-surface-highlight"
+          style={{
+            position: 'absolute',
+            top: '0',
+            left: '5%',
+            right: '5%',
+            height: '10px',
+            background: 'linear-gradient(to bottom, rgba(255,255,255,0.4), transparent)',
+            borderRadius: '100% 100% 0 0 / 200% 200% 0 0',
+            opacity: 0.6,
+            zIndex: 3,
+            pointerEvents: 'none'
+          }}
+        />
+        
         {/* Only show bubbles when there's enough beer */}
         {visualBeerLevel > 5 && bubbles.map(bubble => (
           <div
@@ -542,11 +606,11 @@ const BeerGlass: React.FC<BeerGlassProps> = ({
         style={{
           ...calculateFoamStyle(),
           position: 'absolute',
-          left: 0,
-          right: 0,
+          left: '1%',
+          right: '1%',
           bottom: `${visualBeerLevel}%`,
           background: 'linear-gradient(to bottom, rgba(255, 252, 232, 0.95) 0%, rgba(255, 248, 210, 0.5) 60%, transparent 100%)',
-          borderRadius: '2px',
+          borderRadius: '30% 30% 5px 5px / 20% 20% 5px 5px',
           zIndex: 3,
           boxShadow: 'inset 0 2px 3px -1px rgba(255, 255, 255, 0.7)',
           pointerEvents: 'none',
