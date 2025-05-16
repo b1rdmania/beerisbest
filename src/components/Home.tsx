@@ -248,7 +248,7 @@ const Home = () => {
             tiltIntensity={isTilting ? 
               Math.min(Math.max(
                 Math.abs(tiltDirection.y || 0) * 2 + 
-                Math.abs(tiltVelocity?.y || 0), 0
+                Math.abs(tiltVelocity.y || 0), 0
               ), 1) : 0
             }
           />
