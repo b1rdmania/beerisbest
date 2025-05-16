@@ -15,6 +15,8 @@ const SoundEffects: React.FC<SoundEffectsProps> = ({ soundType, tiltIntensity = 
   const pouringRef = useRef<HTMLAudioElement | null>(null);
   const bgAmbianceRef = useRef<HTMLAudioElement | null>(null);
   const [loaded, setLoaded] = useState(false);
+  // Track if user has interacted with the page
+  const [userInteracted, setUserInteracted] = useState(false);
 
   // Track the last volume level to smooth transitions
   const [lastVolume, setLastVolume] = useState(0);
@@ -61,15 +63,6 @@ const SoundEffects: React.FC<SoundEffectsProps> = ({ soundType, tiltIntensity = 
         bgAmbianceRef.current.volume = 0.1; // Very subtle
         bgAmbianceRef.current.loop = true;
         bgAmbianceRef.current.load();
-        
-        // Auto-play background ambiance (will be muted on iOS until user interaction)
-        try {
-          bgAmbianceRef.current.play().catch(() => {
-            console.log('Background ambiance needs user interaction to play');
-          });
-        } catch (e) {
-          console.log('Could not auto-play ambiance sound');
-        }
       }
       
       setLoaded(true);
@@ -90,6 +83,18 @@ const SoundEffects: React.FC<SoundEffectsProps> = ({ soundType, tiltIntensity = 
       });
     };
   }, [loaded, soundPaths]);
+
+  // Function to safely play audio only if user has interacted
+  const safePlayAudio = (audioRef: React.RefObject<HTMLAudioElement | null>) => {
+    if (!audioRef.current || !userInteracted) return;
+    
+    if (audioRef.current.paused) {
+      audioRef.current.play().catch(e => {
+        // Silently catch the error to prevent console warnings
+        // We'll try again when user interacts
+      });
+    }
+  };
 
   // Function to smoothly transition volume with proper type safety and much slower transition
   const applyVolumeTransition = (audioRef: React.RefObject<HTMLAudioElement | null>, targetVolume: number) => {
@@ -147,7 +152,7 @@ const SoundEffects: React.FC<SoundEffectsProps> = ({ soundType, tiltIntensity = 
 
   // Handle sound playback based on current sound type and tilt intensity with smoother transitions
   useEffect(() => {
-    if (!loaded) return;
+    if (!loaded || !userInteracted) return;
     
     // Calculate volume based on tilt intensity (0-1) with extra smoothing for left-right tilt
     const smoothedIntensity = getSmoothIntensity(tiltIntensity);
@@ -178,9 +183,9 @@ const SoundEffects: React.FC<SoundEffectsProps> = ({ soundType, tiltIntensity = 
         applyVolumeTransition(bgAmbianceRef, 0.12); // Higher when no other sounds
       }
       
-      // Ensure ambiance is playing
-      if (bgAmbianceRef.current.paused) {
-        bgAmbianceRef.current.play().catch(e => console.warn("Ambient audio play failed:", e));
+      // Ensure ambiance is playing if user has interacted
+      if (bgAmbianceRef.current.paused && userInteracted) {
+        safePlayAudio(bgAmbianceRef);
       }
     }
     
@@ -193,7 +198,7 @@ const SoundEffects: React.FC<SoundEffectsProps> = ({ soundType, tiltIntensity = 
           
           if (gentleRef.current.paused) {
             gentleRef.current.volume = volumeLevel * 0.2; // Start even quieter for fade-in effect
-            gentleRef.current.play().catch(e => console.warn("Audio play failed:", e));
+            safePlayAudio(gentleRef);
             // Gradually increase to target volume for smoother start
             setTimeout(() => applyVolumeTransition(gentleRef, volumeLevel), 100);
           } else {
@@ -224,7 +229,7 @@ const SoundEffects: React.FC<SoundEffectsProps> = ({ soundType, tiltIntensity = 
           
           if (heavyRef.current.paused) {
             heavyRef.current.volume = volumeLevel * 0.2; // Start even quieter for fade-in effect
-            heavyRef.current.play().catch(e => console.warn("Audio play failed:", e));
+            safePlayAudio(heavyRef);
             // Gradually increase to target volume
             setTimeout(() => applyVolumeTransition(heavyRef, volumeLevel), 100);
           } else {
@@ -255,7 +260,7 @@ const SoundEffects: React.FC<SoundEffectsProps> = ({ soundType, tiltIntensity = 
           
           if (gulpingRef.current.paused) {
             gulpingRef.current.volume = volumeLevel * 0.3; // Start even quieter for fade-in effect
-            gulpingRef.current.play().catch(e => console.warn("Audio play failed:", e));
+            safePlayAudio(gulpingRef);
             // Gradually increase to target volume
             setTimeout(() => applyVolumeTransition(gulpingRef, volumeLevel), 100);
           } else {
@@ -286,7 +291,7 @@ const SoundEffects: React.FC<SoundEffectsProps> = ({ soundType, tiltIntensity = 
           
           if (pouringRef.current.paused) {
             pouringRef.current.volume = volumeLevel * 0.4; // Start even quieter for fade-in effect
-            pouringRef.current.play().catch(e => console.warn("Audio play failed:", e));
+            safePlayAudio(pouringRef);
             
             // Reset playback to start to ensure we hear the entire pouring sound
             pouringRef.current.currentTime = 0;
@@ -320,28 +325,29 @@ const SoundEffects: React.FC<SoundEffectsProps> = ({ soundType, tiltIntensity = 
         stopAllSounds();
         break;
     }
-  }, [soundType, tiltIntensity, loaded, lastVolume]);
+  }, [soundType, tiltIntensity, loaded, lastVolume, userInteracted]);
 
   // Enable sounds on user interaction (needed for iOS Safari)
   useEffect(() => {
     const enableAudio = () => {
-      if (bgAmbianceRef.current && bgAmbianceRef.current.paused) {
-        bgAmbianceRef.current.volume = 0.12;
-        bgAmbianceRef.current.play().catch(() => {
-          console.log('Could not play ambiance sound');
-        });
-      }
+      setUserInteracted(true);
       
-      document.removeEventListener('click', enableAudio);
-      document.removeEventListener('touchstart', enableAudio);
+      if (bgAmbianceRef.current) {
+        bgAmbianceRef.current.volume = 0.12;
+        safePlayAudio(bgAmbianceRef);
+      }
     };
     
-    document.addEventListener('click', enableAudio);
-    document.addEventListener('touchstart', enableAudio);
+    // Add multiple interaction types to ensure we catch any user interaction
+    const interactionEvents = ['click', 'touchstart', 'pointerdown', 'keydown'];
+    interactionEvents.forEach(event => {
+      document.addEventListener(event, enableAudio, { once: false });
+    });
     
     return () => {
-      document.removeEventListener('click', enableAudio);
-      document.removeEventListener('touchstart', enableAudio);
+      interactionEvents.forEach(event => {
+        document.removeEventListener(event, enableAudio);
+      });
     };
   }, [loaded]);
 
