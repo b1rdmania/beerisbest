@@ -15,9 +15,6 @@ const SoundEffects: React.FC<SoundEffectsProps> = ({ soundType, tiltIntensity = 
   const pouringRef = useRef<HTMLAudioElement | null>(null);
   const bgAmbianceRef = useRef<HTMLAudioElement | null>(null);
   const [loaded, setLoaded] = useState(false);
-  
-  // Track whether we're currently playing sounds
-  const [isPlaying, setIsPlaying] = useState(false);
 
   // Enhanced sound file paths with fallbacks
   const soundPaths = {
@@ -65,7 +62,9 @@ const SoundEffects: React.FC<SoundEffectsProps> = ({ soundType, tiltIntensity = 
           ref.current.loop = true;
           
           // Higher quality playback settings
-          ref.current.preservesPitch = false;
+          if ('preservesPitch' in ref.current) {
+            (ref.current as any).preservesPitch = false;
+          }
           
           // Start loading
           ref.current.load();
@@ -107,45 +106,45 @@ const SoundEffects: React.FC<SoundEffectsProps> = ({ soundType, tiltIntensity = 
     };
   }, [loaded, soundPaths]);
 
+  // Function to smoothly transition volume with proper type safety
+  const applyVolumeTransition = (audioRef: React.RefObject<HTMLAudioElement | null>, targetVolume: number) => {
+    if (!audioRef.current) return;
+    
+    // If audio is playing, transition volume
+    if (!audioRef.current.paused) {
+      const currentVolume = audioRef.current.volume;
+      const volumeDiff = targetVolume - currentVolume;
+      
+      // Use RAF for smoother transitions
+      const startTime = performance.now();
+      const duration = 200; // ms
+      
+      const fadeAudio = (time: number) => {
+        const elapsed = time - startTime;
+        const ratio = Math.min(elapsed / duration, 1);
+        
+        if (audioRef.current) {
+          audioRef.current.volume = currentVolume + volumeDiff * ratio;
+        }
+        
+        if (ratio < 1) {
+          requestAnimationFrame(fadeAudio);
+        }
+      };
+      
+      requestAnimationFrame(fadeAudio);
+    } else {
+      // If not playing, just set volume directly
+      audioRef.current.volume = targetVolume;
+    }
+  };
+
   // Handle sound playback based on current sound type and tilt intensity with smoother transitions
   useEffect(() => {
     if (!loaded) return;
     
     // Calculate volume based on tilt intensity (0-1)
     const adjustedVolume = Math.min(Math.max(tiltIntensity, 0), 1);
-    
-    // Function to smoothly transition volume
-    const applyVolumeTransition = (audioRef: React.RefObject<HTMLAudioElement>, targetVolume: number) => {
-      if (!audioRef.current) return;
-      
-      // If audio is playing, transition volume
-      if (!audioRef.current.paused) {
-        const currentVolume = audioRef.current.volume;
-        const volumeDiff = targetVolume - currentVolume;
-        
-        // Use RAF for smoother transitions
-        const startTime = performance.now();
-        const duration = 200; // ms
-        
-        const fadeAudio = (time: number) => {
-          const elapsed = time - startTime;
-          const ratio = Math.min(elapsed / duration, 1);
-          
-          if (audioRef.current) {
-            audioRef.current.volume = currentVolume + volumeDiff * ratio;
-          }
-          
-          if (ratio < 1) {
-            requestAnimationFrame(fadeAudio);
-          }
-        };
-        
-        requestAnimationFrame(fadeAudio);
-      } else {
-        // If not playing, just set volume directly
-        audioRef.current.volume = targetVolume;
-      }
-    };
     
     // Function to stop all sounds with a gentle fade out
     const stopAllSounds = () => {
@@ -163,8 +162,6 @@ const SoundEffects: React.FC<SoundEffectsProps> = ({ soundType, tiltIntensity = 
           }, 200);
         }
       });
-      
-      setIsPlaying(false);
     };
     
     // Adjust background ambient volume based on if other sounds are playing
@@ -198,8 +195,6 @@ const SoundEffects: React.FC<SoundEffectsProps> = ({ soundType, tiltIntensity = 
           // Adjust playback rate slightly based on tilt intensity
           gentleRef.current.playbackRate = 0.9 + (adjustedVolume * 0.2);
           
-          setIsPlaying(true);
-          
           // Stop other sounds
           [heavyRef, gulpingRef, pouringRef].forEach(ref => {
             if (ref.current && !ref.current.paused) {
@@ -229,8 +224,6 @@ const SoundEffects: React.FC<SoundEffectsProps> = ({ soundType, tiltIntensity = 
           // Adjust playback rate based on tilt intensity for more realism
           heavyRef.current.playbackRate = 0.95 + (adjustedVolume * 0.3);
           
-          setIsPlaying(true);
-          
           // Stop other sounds
           [gentleRef, gulpingRef, pouringRef].forEach(ref => {
             if (ref.current && !ref.current.paused) {
@@ -259,8 +252,6 @@ const SoundEffects: React.FC<SoundEffectsProps> = ({ soundType, tiltIntensity = 
           
           // Higher playback rate for intense gulping
           gulpingRef.current.playbackRate = 1 + (adjustedVolume * 0.4);
-          
-          setIsPlaying(true);
           
           // Stop other sounds
           [gentleRef, heavyRef, pouringRef].forEach(ref => {
@@ -293,8 +284,6 @@ const SoundEffects: React.FC<SoundEffectsProps> = ({ soundType, tiltIntensity = 
           
           // Normal playback rate for pouring
           pouringRef.current.playbackRate = 1;
-          
-          setIsPlaying(true);
           
           // Stop other sounds
           [gentleRef, heavyRef, gulpingRef].forEach(ref => {

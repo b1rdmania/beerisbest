@@ -14,36 +14,6 @@ interface LiquidStyle extends CSSProperties {
   WebkitBackfaceVisibility?: 'hidden' | 'visible';
 }
 
-// Quaternion helper for more accurate 3D physics
-const Quaternion = {
-  fromEuler: (x: number, y: number, z: number) => {
-    // Convert euler angles to quaternion for more accurate 3D transformations
-    const cx = Math.cos(x * 0.5);
-    const sx = Math.sin(x * 0.5);
-    const cy = Math.cos(y * 0.5);
-    const sy = Math.sin(y * 0.5);
-    const cz = Math.cos(z * 0.5);
-    const sz = Math.sin(z * 0.5);
-    
-    return {
-      w: cx * cy * cz + sx * sy * sz,
-      x: sx * cy * cz - cx * sy * sz,
-      y: cx * sy * cz + sx * cy * sz,
-      z: cx * cy * sz - sx * sy * cz
-    };
-  },
-  
-  toRotationMatrix: (q: {w: number, x: number, y: number, z: number}) => {
-    // Convert quaternion to rotation matrix
-    const { w, x, y, z } = q;
-    return [
-      [1 - 2*y*y - 2*z*z, 2*x*y - 2*w*z, 2*x*z + 2*w*y],
-      [2*x*y + 2*w*z, 1 - 2*x*x - 2*z*z, 2*y*z - 2*w*x],
-      [2*x*z - 2*w*y, 2*y*z + 2*w*x, 1 - 2*x*x - 2*y*y]
-    ];
-  }
-};
-
 const BeerGlass: React.FC<BeerGlassProps> = ({ 
   beerLevel, 
   isTilting, 
@@ -168,18 +138,11 @@ const BeerGlass: React.FC<BeerGlassProps> = ({
     y: isIOS ? smoothedTiltDirection.y * 1.2 : smoothedTiltDirection.y,
   };
   
-  // Enhanced liquid physics calculation with quaternion-based transforms
+  // Enhanced liquid physics calculation
   const calculateLiquidStyle = (): LiquidStyle => {
     // Calculate tilt angle from direction vectors
     const tiltAngle = isTilting ? Math.max(0, adjustedTiltDirection.y * 90) : 0;
     const sideAngle = adjustedTiltDirection.x * 25; // Left-right tilt angle
-    
-    // Convert to radians for quaternion calculation
-    const betaRad = (tiltAngle * Math.PI) / 180;
-    const gammaRad = (sideAngle * Math.PI) / 180;
-    
-    // Use quaternion for more accurate 3D rotation calculation
-    const rotation = Quaternion.fromEuler(betaRad, 0, gammaRad);
     
     // Calculate liquid shift based on tilt with improved physics
     const tiltOffset = Math.min(35, (tiltAngle / 90) * 60);
